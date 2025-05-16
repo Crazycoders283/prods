@@ -256,7 +256,8 @@ function FlightLanding() {
       };
 
       try {
-        const response = await axios.post((import.meta.env.VITE_API_URL || 'https://jet-set-go-psi.vercel.app/api/')+"flights/search", searchData, {
+        const apiBaseUrl = import.meta.env.VITE_API_URL || '/api/';
+        const response = await axios.post(`${apiBaseUrl}flights/search`, searchData, {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"

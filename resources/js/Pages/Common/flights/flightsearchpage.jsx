@@ -126,9 +126,10 @@ function FlightSearchPage() {
             delete searchData.returnDate;
           }
 
-          console.error('Making API request with data:', import.meta.env.VITE_API_URL || 'https://jet-set-go-psi.vercel.app/api/');
+          const apiBaseUrl = import.meta.env.VITE_API_URL || '/api/';
+          console.error('Making API request with data:', apiBaseUrl);
 
-          const response = await fetch((import.meta.env.VITE_API_URL || 'https://jet-set-go-psi.vercel.app/api/') + 'flights/search', {
+          const response = await fetch(`${apiBaseUrl}flights/search`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -523,10 +524,8 @@ function FlightSearchPage() {
       }
 
       // Ensure we have a proper API URL
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://jet-set-go-psi.vercel.app/api/';
-      const apiUrl = apiBaseUrl.endsWith('/') 
-        ? `${apiBaseUrl}flights/search` 
-        : `${apiBaseUrl}/flights/search`;
+      const apiBaseUrl = import.meta.env.VITE_API_URL || '/api/';
+      const apiUrl = `${apiBaseUrl}flights/search`;
         
       console.log('Making API request to:', apiUrl);
         
@@ -713,10 +712,8 @@ function FlightSearchPage() {
       
       // Fetch flights for the new date
       // Ensure we have a proper API URL
-      const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://jet-set-go-psi.vercel.app/api/';
-      const apiUrl = apiBaseUrl.endsWith('/') 
-        ? `${apiBaseUrl}flights/search` 
-        : `${apiBaseUrl}/flights/search`;
+      const apiBaseUrl = import.meta.env.VITE_API_URL || '/api/';
+      const apiUrl = `${apiBaseUrl}flights/search`;
         
       console.log('Making API request to:', apiUrl);
         
