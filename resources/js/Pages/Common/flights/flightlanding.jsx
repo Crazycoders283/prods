@@ -8,6 +8,9 @@ import Navbar from "../Navbar"
 import Footer from "../Footer"
 import withPageElements from "../PageWrapper"
 import axios from 'axios';
+import { useState, useEffect } from "react";
+// Import centralized API configuration
+import apiConfig from '../../../../../src/config/api.js';
 // Importing data from the data file
 import { heroImage } from "./data.js"
 
@@ -256,26 +259,11 @@ function FlightLanding() {
       };
 
       try {
-        // Fix API URL format issues
-        let apiBaseUrl = import.meta.env.VITE_API_URL || '';
+        // Use API endpoint from centralized config
+        const apiUrl = apiConfig.endpoints.flights.search;
+        console.log('Using API URL:', apiUrl);
         
-        // Check if the URL needs protocol prefixing
-        if (apiBaseUrl && !apiBaseUrl.startsWith('http') && !apiBaseUrl.startsWith('/')) {
-          apiBaseUrl = 'https://' + apiBaseUrl;
-        }
-        
-        // Default to local API if no URL is provided
-        if (!apiBaseUrl) {
-          apiBaseUrl = '/api/';
-        }
-        
-        // Ensure URL ends with a slash
-        if (apiBaseUrl && !apiBaseUrl.endsWith('/')) {
-          apiBaseUrl += '/';
-        }
-        
-        console.log('Using API URL:', apiBaseUrl);
-        const response = await axios.post(`${apiBaseUrl}flights/search`, searchData, {
+        const response = await axios.post(apiUrl, searchData, {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"

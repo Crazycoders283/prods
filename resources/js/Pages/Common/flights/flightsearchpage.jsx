@@ -14,6 +14,9 @@ import {
   specialFares
 } from "./data.js";
 
+// Import centralized API configuration
+import apiConfig from '../../../../../src/config/api.js';
+
 function FlightSearchPage() {
   const location = useLocation();
   const searchData = location.state?.searchData;
@@ -126,25 +129,8 @@ function FlightSearchPage() {
             delete searchData.returnDate;
           }
 
-          // Fix API URL format issues
-          let apiBaseUrl = import.meta.env.VITE_API_URL || '';
-          
-          // Check if the URL needs protocol prefixing
-          if (apiBaseUrl && !apiBaseUrl.startsWith('http') && !apiBaseUrl.startsWith('/')) {
-            apiBaseUrl = 'https://' + apiBaseUrl;
-          }
-          
-          // Default to local API if no URL is provided
-          if (!apiBaseUrl) {
-            apiBaseUrl = '/api/';
-          }
-          
-          // Ensure URL ends with a slash
-          if (apiBaseUrl && !apiBaseUrl.endsWith('/')) {
-            apiBaseUrl += '/';
-          }
-          
-          const apiUrl = `${apiBaseUrl}flights/search`;
+          // Use API endpoint from centralized config
+          const apiUrl = apiConfig.endpoints.flights.search;
           console.log('Making API request to:', apiUrl);
 
           const response = await fetch(apiUrl, {
@@ -541,25 +527,8 @@ function FlightSearchPage() {
         delete searchData.returnDate;
       }
 
-      // Fix API URL format issues
-      let apiBaseUrl = import.meta.env.VITE_API_URL || '';
-      
-      // Check if the URL needs protocol prefixing
-      if (apiBaseUrl && !apiBaseUrl.startsWith('http') && !apiBaseUrl.startsWith('/')) {
-        apiBaseUrl = 'https://' + apiBaseUrl;
-      }
-      
-      // Default to local API if no URL is provided
-      if (!apiBaseUrl) {
-        apiBaseUrl = '/api/';
-      }
-      
-      // Ensure URL ends with a slash
-      if (apiBaseUrl && !apiBaseUrl.endsWith('/')) {
-        apiBaseUrl += '/';
-      }
-      
-      const apiUrl = `${apiBaseUrl}flights/search`;
+      // Use API endpoint from centralized config
+      const apiUrl = apiConfig.endpoints.flights.search;
       console.log('Making API request to:', apiUrl);
         
       const response = await fetch(apiUrl, {
@@ -743,25 +712,8 @@ function FlightSearchPage() {
         }))
       );
       
-      // Fix API URL format issues
-      let apiBaseUrl = import.meta.env.VITE_API_URL || '';
-      
-      // Check if the URL needs protocol prefixing
-      if (apiBaseUrl && !apiBaseUrl.startsWith('http') && !apiBaseUrl.startsWith('/')) {
-        apiBaseUrl = 'https://' + apiBaseUrl;
-      }
-      
-      // Default to local API if no URL is provided
-      if (!apiBaseUrl) {
-        apiBaseUrl = '/api/';
-      }
-      
-      // Ensure URL ends with a slash
-      if (apiBaseUrl && !apiBaseUrl.endsWith('/')) {
-        apiBaseUrl += '/';
-      }
-      
-      const apiUrl = `${apiBaseUrl}flights/search`;
+      // Use API endpoint from centralized config
+      const apiUrl = apiConfig.endpoints.flights.search;
       console.log('Making API request to:', apiUrl);
         
       const response = await fetch(apiUrl, {
