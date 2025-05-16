@@ -12,6 +12,9 @@ import "./styles.css";
 import supabase from "../../../lib/supabase";
 import axios from 'axios';
 import { format } from 'date-fns';
+import apiConfig from '../../../../../src/config/api.js';
+import Price from "../../../Components/Price";
+import currencyService from "../../../Services/CurrencyService";
 
 export default function HotelDetails() {
   const navigate = useNavigate();
@@ -89,6 +92,40 @@ export default function HotelDetails() {
     const fetchHotelDetails = async () => {
       try {
         setIsLoading(true);
+        
+        // Fetch actual hotel details from API
+        if (hotelData && hotelData.id) {
+          try {
+            const response = await axios.get(apiConfig.endpoints.hotels.booking + `/${hotelData.id}`, {
+              params: {
+                checkInDate: formatDate(checkInDate),
+                checkOutDate: formatDate(checkOutDate),
+                adults: guestCount.adults,
+                children: guestCount.children
+              }
+            });
+            
+            if (response.data?.success && response.data?.data) {
+              // Merge API data with hotelData
+              const apiHotelDetails = response.data.data;
+              
+              // Update hotelData with API details
+              hotelData = {
+                ...hotelData,
+                name: apiHotelDetails.name || hotelData.name,
+                description: apiHotelDetails.description || hotelData.description,
+                formattedAddress: apiHotelDetails.formattedAddress || hotelData.location,
+                phone: apiHotelDetails.phone || 'Phone not available',
+                email: apiHotelDetails.email || 'Email not available'
+              };
+              
+              console.log('API hotel details:', apiHotelDetails);
+            }
+          } catch (error) {
+            console.error('Error fetching API hotel details:', error);
+            // Continue with default data if API call fails
+          }
+        }
 
         // Default values
         const defaultPrice = 199;
@@ -101,6 +138,7 @@ export default function HotelDetails() {
             id: 0,
             name: "Deluxe Room",
             price: basePrice,
+            formattedPrice: currencyService.convertAndFormat(basePrice),
             capacity: 2,
             features: ["Mountain View", "King Bed", "Free WiFi"]
           },
@@ -108,6 +146,7 @@ export default function HotelDetails() {
             id: 1,
             name: "Premium Suite",
             price: basePrice * 1.5,
+            formattedPrice: currencyService.convertAndFormat(basePrice * 1.5),
             capacity: 3,
             features: ["Lake View", "King Bed + Sofa Bed", "Free WiFi", "Jacuzzi"]
           },
@@ -115,6 +154,7 @@ export default function HotelDetails() {
             id: 2,
             name: "Family Suite",
             price: basePrice * 2,
+            formattedPrice: currencyService.convertAndFormat(basePrice * 2),
             capacity: 4,
             features: ["Mountain View", "2 Queen Beds", "Free WiFi", "Kitchenette"]
           }
@@ -218,12 +258,16 @@ export default function HotelDetails() {
         setSelectedHotel({
           ...hotelData,
           longDescription: hotelData.description || 'Experience luxury and comfort at our hotel.',
-          address: hotelData.location || 'Address not available',
+          address: hotelData.formattedAddress || hotelData.location || 'Address not available',
           reviewCount: 128,
           amenities: hotelData.amenities || ['WiFi', 'Room Service', 'Restaurant'],
           images: {
             main: hotelData.images?.main || defaultImagePlaceholder,
             gallery: hotelData.images?.gallery || defaultGalleryImages
+          },
+          contactInfo: {
+            phone: hotelData.phone || 'Phone not available',
+            email: hotelData.email || 'Email not available'
           }
         });
 
@@ -231,6 +275,7 @@ export default function HotelDetails() {
       } catch (error) {
         console.error('Error fetching hotel details:', error);
         setIsLoading(false);
+        setError('Unable to load hotel details. Please try again later.');
       }
     };
 
@@ -247,7 +292,7 @@ export default function HotelDetails() {
         setOfferLoading(true);
         setOfferError('');
 
-        const response = await axios.get(`${import.meta.env.VITE_APP_URL}hotels/offers/${selectedHotel.id}`, {
+        const response = await axios.get(apiConfig.endpoints.hotels.offers + `/${selectedHotel.id}`, {
           params: {
             checkInDate: formatDate(checkInDate),
             checkOutDate: formatDate(checkOutDate),
@@ -257,7 +302,32 @@ export default function HotelDetails() {
         });
 
         if (response.data?.success && response.data?.data) {
-          setHotelOffer(response.data.data);
+          // Process offer data
+          const offerData = response.data.data;
+          
+          // If offers property exists, use it to update room types
+          if (offerData.offers && offerData.offers.length > 0) {
+                          // Map API offers to room types with all required fields
+              const apiRoomTypes = offerData.offers.map((offer, index) => ({
+                id: index,
+                offerId: offer.id,
+                name: offer.room?.description?.text || `Room Option ${index + 1}`,
+                price: parseFloat(offer.price?.total) || parseFloat(selectedHotel?.price) || 199,
+                formattedPrice: currencyService.convertAndFormat(parseFloat(offer.price?.total) || parseFloat(selectedHotel?.price) || 199),
+                capacity: offer.guests?.adults || 2,
+                features: offer.room?.amenities || ["Free WiFi"],
+                bedType: offer.bedType || "Standard",
+                cancellationPolicy: offer.cancellationPolicy || "Standard cancellation policy",
+                description: offer.room?.description?.text || "Comfortable room with all standard amenities",
+                available: true
+              }));
+            
+            if (apiRoomTypes.length > 0) {
+              setRoomTypes(apiRoomTypes);
+            }
+          }
+          
+          setHotelOffer(offerData);
         } else {
           throw new Error('Invalid response format');
         }
@@ -405,7 +475,8 @@ export default function HotelDetails() {
       const formattedCheckIn = formatDate(checkInDate);
       const formattedCheckOut = formatDate(checkOutDate);
 
-      const response = await axios.get(import.meta.env.VITE_APP_URL+'hotels/check-availability', {
+      // Use the correct endpoint for checking availability
+      const response = await axios.get(apiConfig.endpoints.hotels.offers + '/check-availability', {
         params: {
           destination: hotelData.id,
           checkInDate: formattedCheckIn,
@@ -726,7 +797,7 @@ export default function HotelDetails() {
                           <p className="text-sm text-gray-600">Up to {room.capacity} guests</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-gray-900">${room.price}</p>
+                          <p className="font-bold text-gray-900">{room.formattedPrice}</p>
                           <p className="text-sm text-gray-600">per night</p>
                         </div>
                       </div>
@@ -875,9 +946,9 @@ export default function HotelDetails() {
                       </div>
                     ) : hotelOffer?.offers?.[0]?.price ? (
                       <>
-                        <span className="text-2xl font-bold text-gray-900">
-                          ${hotelOffer.offers[0].price.total}
-                        </span>
+                                              <span className="text-2xl font-bold text-gray-900">
+                        <Price amount={hotelOffer.offers[0].price.total} />
+                      </span>
                         <span className="text-gray-600 ml-1">per night</span>
                         {hotelOffer.offers[0].rateCode && (
                           <div className="mt-1">
@@ -888,7 +959,7 @@ export default function HotelDetails() {
                         )}
                       </>
                     ) : (
-                      <span className="text-2xl font-bold text-gray-900">${currentRoomPrice}</span>
+                      <span className="text-2xl font-bold text-gray-900"><Price amount={currentRoomPrice} /></span>
                     )}
                   </div>
                   <div className="flex items-center">
@@ -1015,42 +1086,42 @@ export default function HotelDetails() {
                     <>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Base Price</span>
-                        <span className="text-gray-700">${hotelOffer.offers[0].price.base}</span>
+                        <span className="text-gray-700"><Price amount={hotelOffer.offers[0].price.base} /></span>
                       </div>
                       {hotelOffer.offers[0].price.variations?.changes?.map((change, index) => (
                         <div key={index} className="flex justify-between text-sm text-gray-600">
                           <span>{format(new Date(change.startDate), 'MMM d')} - {format(new Date(change.endDate), 'MMM d')}</span>
-                          <span>${change.base} per night</span>
+                          <span><Price amount={change.base} /> per night</span>
                         </div>
                       ))}
                       <div className="flex justify-between">
                         <span className="text-gray-700">Taxes & Fees</span>
                         <span className="text-gray-700">
-                          ${(parseFloat(hotelOffer.offers[0].price.total) - parseFloat(hotelOffer.offers[0].price.base)).toFixed(2)}
+                          <Price amount={(parseFloat(hotelOffer.offers[0].price.total) - parseFloat(hotelOffer.offers[0].price.base))} />
                         </span>
                       </div>
                       <div className="border-t border-gray-200 pt-4 flex justify-between font-bold">
                         <span>Total</span>
-                        <span>${hotelOffer.offers[0].price.total}</span>
+                        <span><Price amount={hotelOffer.offers[0].price.total} /></span>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-gray-700">${currentRoomPrice} x {totalNights} nights</span>
-                        <span className="text-gray-700">${currentRoomPrice * totalNights}</span>
+                        <span className="text-gray-700"><Price amount={currentRoomPrice} /> x {totalNights} nights</span>
+                        <span className="text-gray-700"><Price amount={currentRoomPrice * totalNights} /></span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Cleaning fee</span>
-                        <span className="text-gray-700">$50</span>
+                        <span className="text-gray-700"><Price amount={50} /></span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Service fee</span>
-                        <span className="text-gray-700">$30</span>
+                        <span className="text-gray-700"><Price amount={30} /></span>
                       </div>
                       <div className="border-t border-gray-200 pt-4 flex justify-between font-bold">
                         <span>Total</span>
-                        <span>${totalPrice}</span>
+                        <span><Price amount={totalPrice} /></span>
                       </div>
                     </>
                   )}
@@ -1392,7 +1463,7 @@ export default function HotelDetails() {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span>${totalPrice}</span>
+                  <span><Price amount={totalPrice} /></span>
                 </div>
               </div>
             </div>
