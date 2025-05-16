@@ -1,5 +1,5 @@
 import express from 'express';
-import { listHotels, searchHotels, getDestinations } from '../controllers/hotel.controller.js';
+import { listHotels, searchHotels, getDestinations, getHotelDetails, checkAvailability, bookHotel } from '../controllers/hotel.controller.js';
 import axios from 'axios';
 import dayjs from 'dayjs';
 
@@ -14,6 +14,15 @@ router.get('/list', listHotels);
 // Search hotels with availability (support both GET and POST)
 router.post('/search', searchHotels);
 router.get('/search', searchHotels);
+
+// Get hotel details by ID
+router.get('/details/:hotelId', getHotelDetails);
+
+// Get hotel offers by ID
+router.get('/offers/:hotelId', checkAvailability);
+
+// Book a hotel
+router.post('/book/:hotelId', bookHotel);
 
 const getAccessToken = async () => {
   try {

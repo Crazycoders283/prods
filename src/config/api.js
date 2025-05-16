@@ -60,7 +60,8 @@ export const endpoints = {
   // Hotel endpoints
   hotels: {
     search: createEndpoint('/hotels/search'),
-    booking: createEndpoint('/hotels/booking')
+    booking: createEndpoint('/hotels/details'),
+    offers: createEndpoint('/hotels/offers')
   },
   
   // Email endpoints

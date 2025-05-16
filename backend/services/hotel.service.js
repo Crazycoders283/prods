@@ -1,4 +1,5 @@
 import Amadeus from 'amadeus';
+import axios from 'axios';
 
 class HotelService {
   constructor() {
@@ -18,23 +19,28 @@ class HotelService {
     this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
   }
 
-  async  getAccessToken() {
-    const response = await axios.post('https://test.api.amadeus.com/v1/security/oauth2/token', null, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      auth: {
-        username: process.env.REACT_APP_AMADEUS_API_KEY,
-        password: process.env.REACT_APP_AMADEUS_API_SECRET,
-      },
-      params: {
-        grant_type: 'client_credentials',
-      }
-    });
-  
-    return response.data.access_token;
+  async getAccessToken() {
+    try {
+      const response = await axios.post(
+        'https://test.api.amadeus.com/v1/security/oauth2/token',
+        new URLSearchParams({ grant_type: 'client_credentials' }).toString(),
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          auth: {
+            username: process.env.REACT_APP_AMADEUS_API_KEY,
+            password: process.env.REACT_APP_AMADEUS_API_SECRET,
+          }
+        }
+      );
+    
+      return response.data.access_token;
+    } catch (error) {
+      console.error('Error getting access token:', error.response?.data || error.message);
+      throw new Error('Failed to get access token');
+    }
   }
-
 
   async getDestinations() {
     try {
@@ -71,18 +77,24 @@ class HotelService {
   async getHotelsByCity(cityCode) {
     try {
       console.log('Getting hotels for city:', cityCode);
-      const response = await this.amadeus.referenceData.locations.hotels.byCity.get({
-        cityCode
+      const token = await this.getAccessToken();
+      
+      const response = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        params: {
+          cityCode: cityCode,
+          radius: 5,
+          radiusUnit: 'KM',
+          hotelSource: 'ALL'
+        }
       });
-      console.log('Hotels response:', response);
+      
       return response.data || [];
     } catch (error) {
-      console.error('Error getting hotels:', {
-        message: error.message,
-        code: error.code,
-        description: error.description
-      });
-      throw new Error(error.description?.[0]?.detail || error.message || 'Failed to get hotels');
+      console.error('Error getting hotels:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.errors?.[0]?.detail || error.message || 'Failed to get hotels');
     }
   }
 
@@ -105,61 +117,188 @@ class HotelService {
         checkOut: checkOutDate || tomorrow
       };
 
+      // Get hotels in city first
+      const hotelsResponse = await this.getHotelsByCity(cityCode);
+      
+      if (!hotelsResponse.data || hotelsResponse.data.length === 0) {
+        return { data: [] };
+      }
+      
+      // Get hotel IDs (limit to first 10 for performance)
+      const hotelIds = hotelsResponse.data.slice(0, 10).map(hotel => hotel.hotelId).join(',');
+      
       // Search for hotel offers
-
-      //https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city
-      // const response = await this.amadeus.shopping.hotelOffers.get({
-      //   cityCode,
-      //   checkInDate: searchDates.checkIn,
-      //   checkOutDate: searchDates.checkOut,
-      //   adults,
-      //   radius: 50,
-      //   radiusUnit: 'KM',
-      //   includeClosed: false,
-      //   bestRateOnly: true,
-      //   view: 'FULL'
-      // });
-      console.log('cccccccccccccccccc')
       const token = await this.getAccessToken();
-
-      const response = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city', {
+      
+      const response = await axios.get('https://test.api.amadeus.com/v3/shopping/hotel-offers', {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.amadeus+json'
         },
         params: {
-          cityCode:"PAR",               // e.g., 'PAR'
-          radius: 5,              // radius in KM
-          radiusUnit: 'KM',       // KM or MI
-          amenities: 'ROOM_SERVICE',
-          hotelSource: 'ALL'
+          hotelIds: hotelIds,
+          checkInDate: searchDates.checkIn,
+          checkOutDate: searchDates.checkOut,
+          adults: adults,
+          roomQuantity: 1,
+          currency: 'USD',
+          bestRateOnly: true
         }
       });
-      console.log(response,'kkkkkkkkkkkkkkkkkkkkkkkkkk')
-      return response.data || [];
+      
+      // Add additional display attributes to each hotel result
+      if (response.data && response.data.data) {
+        response.data.data = response.data.data.map(hotel => {
+          // Find the corresponding hotel from the city search to get more details
+          const hotelInfo = hotelsResponse.data.find(h => h.hotelId === hotel.hotel.hotelId);
+          
+          return {
+            ...hotel,
+            hotel: {
+              ...hotel.hotel,
+              name: hotel.hotel.name || (hotelInfo ? hotelInfo.name : 'Unknown Hotel'),
+              cityName: hotelInfo ? hotelInfo.address?.cityName : '',
+              address: {
+                ...hotel.hotel.address,
+                cityName: hotelInfo ? hotelInfo.address?.cityName : '',
+                countryName: hotelInfo ? hotelInfo.address?.countryName : ''
+              },
+              rating: hotel.hotel.rating || (hotelInfo ? hotelInfo.rating : ''),
+              amenities: hotel.hotel.amenities || [],
+              media: hotel.hotel.media || [],
+              description: hotel.hotel.description || 'No description available',
+              contact: hotel.hotel.contact || {}
+            }
+          };
+        });
+      }
+      
+      return response.data || { data: [] };
     } catch (error) {
-      console.error('Error searching hotels:sssssssssssssssssssssssssss', error);
-      throw new Error(error.description?.[0]?.detail || error.message || 'Failed to search hotels');
+      console.error('Error searching hotels:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.errors?.[0]?.detail || error.message || 'Failed to search hotels');
     }
   }
 
-  async getHotelOfferById(offerId) {
+  async getHotelDetails(hotelId) {
     try {
-      console.log('Getting hotel offer details for ID:', offerId);
-
-      const response = await this.amadeus.shopping.hotelOffer(offerId).get();
-
-      if (!response.data) {
-        throw new Error('Hotel offer not found');
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error('Error getting hotel offer:', {
-        message: error.message,
-        code: error.code,
-        description: error.description
+      console.log('Getting hotel details for ID:', hotelId);
+      const token = await this.getAccessToken();
+      
+      // First get the hotel information
+      const hotelResponse = await axios.get(`https://test.api.amadeus.com/v1/reference-data/locations/hotels/${hotelId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-      throw new Error(error.description || error.message);
+      
+      if (!hotelResponse.data || !hotelResponse.data.data) {
+        throw new Error('Hotel not found');
+      }
+      
+      return {
+        ...hotelResponse.data.data,
+        // Add additional fields for the frontend display
+        formattedAddress: hotelResponse.data.data.address ? 
+          `${hotelResponse.data.data.address.lines?.join(', ') || ''}, ${hotelResponse.data.data.address.cityName || ''}, ${hotelResponse.data.data.address.countryName || ''}` : 
+          'Address unavailable',
+        phone: hotelResponse.data.data.contact?.phone || 'Phone unavailable',
+        email: hotelResponse.data.data.contact?.email || 'Email unavailable'
+      };
+    } catch (error) {
+      console.error('Error getting hotel details:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.errors?.[0]?.detail || error.message || 'Failed to get hotel details');
+    }
+  }
+
+  async getHotelOffers(hotelId, params) {
+    try {
+      console.log('Getting hotel offers for ID:', hotelId);
+      
+      const { checkInDate, checkOutDate, adults = 2, children = 0 } = params;
+      
+      if (!checkInDate || !checkOutDate) {
+        throw new Error('Check-in and check-out dates are required');
+      }
+      
+      const token = await this.getAccessToken();
+      
+      const response = await axios.get('https://test.api.amadeus.com/v3/shopping/hotel-offers', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.amadeus+json'
+        },
+        params: {
+          hotelIds: hotelId,
+          checkInDate,
+          checkOutDate,
+          adults: adults,
+          children: children,
+          roomQuantity: 1,
+          currency: 'USD',
+          bestRateOnly: false
+        }
+      });
+      
+      if (!response.data || !response.data.data || response.data.data.length === 0) {
+        return { offers: [] };
+      }
+      
+      // Enhance the offers with additional display info
+      const hotelData = response.data.data[0];
+      const offers = hotelData.offers.map(offer => {
+        return {
+          ...offer,
+          // Add computed properties for the frontend
+          formattedPrice: `$${parseFloat(offer.price.total).toFixed(2)} ${offer.price.currency}`,
+          roomDescription: offer.room?.description?.text || 'Standard Room',
+          cancellationPolicy: offer.policies?.cancellation?.description || 'Cancellation policy not available',
+          bedType: offer.room?.typeEstimated?.bedType || 'Standard',
+          amenities: offer.room?.amenities || []
+        };
+      });
+      
+      return {
+        hotel: hotelData.hotel,
+        offers
+      };
+    } catch (error) {
+      console.error('Error getting hotel offers:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.errors?.[0]?.detail || error.message || 'Failed to get hotel offers');
+    }
+  }
+
+  async checkAvailability(hotelId, checkInDate, checkOutDate, adults) {
+    try {
+      return await this.getHotelOffers(hotelId, { checkInDate, checkOutDate, adults });
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      throw new Error(error.message || 'Failed to check hotel availability');
+    }
+  }
+
+  async bookHotel(hotelId, offerId, guests, payments) {
+    try {
+      console.log('Booking hotel:', { hotelId, offerId, guests, payments });
+      
+      // For now, just return a mock booking confirmation
+      // In a real implementation, you would use the Amadeus booking API
+      return {
+        bookingId: 'MOCK-' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+        status: 'CONFIRMED',
+        hotelId,
+        offerId,
+        checkInDate: guests.checkInDate,
+        checkOutDate: guests.checkOutDate,
+        guestName: `${guests.firstName} ${guests.lastName}`,
+        totalPrice: payments.amount,
+        currency: payments.currency || 'USD',
+        bookingDate: new Date().toISOString(),
+        confirmationNumber: 'CN' + Math.random().toString(36).substring(2, 10).toUpperCase()
+      };
+    } catch (error) {
+      console.error('Error booking hotel:', error);
+      throw new Error(error.message || 'Failed to book hotel');
     }
   }
 }

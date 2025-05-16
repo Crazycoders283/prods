@@ -91,11 +91,9 @@ export const getDestinations = async (req, res) => {
 };
 
 export const searchHotels = async (req, res) => {
-  console.log(req);
   try {
     const params = req.method === 'POST' ? req.body : req.query;
     const { destination, dates, travelers, cityCode, checkInDate, checkOutDate, adults } = params;
-    console.log(params,'sssssssssssssssssssss')
 
     const searchParams = {
       cityCode: cityCode || destination,
@@ -103,6 +101,8 @@ export const searchHotels = async (req, res) => {
       checkOutDate,
       adults: parseInt(adults || travelers) || 2
     };
+    
+    // Handle date ranges if provided
     if (dates && dates !== 'Select dates') {
       const [start, end] = dates.split(' - ');
       if (start && end) {
@@ -111,25 +111,19 @@ export const searchHotels = async (req, res) => {
       }
     }
 
-    // Get access token
-    const token = await getAccessToken();
+    // Validate required parameters
+    if (!searchParams.cityCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'City code or destination is required'
+      });
+    }
 
-    // Fetch hotel offers from Amadeus API
-    const response = await axios.get('https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      params: {
-        cityCode: searchParams.cityCode,
-        radius: 5,
-        radiusUnit: 'KM',
-        amenities: 'ROOM_SERVICE',
-        hotelSource: 'ALL'
-      }
-    });
+    const results = await hotelService.searchHotels(searchParams);
+    
     res.json({
       success: true,
-      data: response.data
+      data: results
     });
   } catch (error) {
     console.error('Error in searchHotels:', error);
@@ -139,8 +133,6 @@ export const searchHotels = async (req, res) => {
     });
   }
 };
-
-
 
 export const getHotelDetails = async (req, res) => {
   try {
@@ -172,7 +164,7 @@ export const getHotelDetails = async (req, res) => {
 export const checkAvailability = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const { checkInDate, checkOutDate, adults } = req.query;
+    const { checkInDate, checkOutDate, adults, children } = req.query;
     
     if (!hotelId || !checkInDate || !checkOutDate) {
       return res.status(400).json({ 
@@ -181,11 +173,14 @@ export const checkAvailability = async (req, res) => {
       });
     }
 
-    const availability = await hotelService.checkAvailability(
+    const availability = await hotelService.getHotelOffers(
       hotelId,
-      checkInDate,
-      checkOutDate,
-      parseInt(adults) || 1
+      {
+        checkInDate,
+        checkOutDate,
+        adults: parseInt(adults) || 1,
+        children: parseInt(children) || 0
+      }
     );
     
     res.json({
@@ -204,17 +199,18 @@ export const checkAvailability = async (req, res) => {
 
 export const bookHotel = async (req, res) => {
   try {
+    const { hotelId } = req.params;
     const { offerId, guests, payments } = req.body;
     
-    if (!offerId || !guests || !payments) {
+    if (!hotelId || !offerId || !guests || !payments) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Offer ID, guests, and payment information are required' 
+        message: 'Hotel ID, offer ID, guests, and payment information are required' 
       });
     }
 
     const booking = await hotelService.bookHotel(
-      req.params.hotelId,
+      hotelId,
       offerId,
       guests,
       payments

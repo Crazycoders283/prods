@@ -672,6 +672,12 @@ const FlightBookingSuccess = React.lazy(() =>
     .catch(() => ({ default: () => <div>Loading Booking Success Page...</div> }))
 );
 
+// Import FlightCreateOrders component for handling Amadeus API order creation
+const FlightCreateOrders = React.lazy(() => 
+  import('./Pages/Common/flights/FlightCreateOrders')
+    .catch(() => ({ default: () => <div>Processing Your Booking...</div> }))
+);
+
 // Import profiledashboard component
 const ProfileDashboard = React.lazy(() => 
   import('./Pages/Common/login/profiledashboard')
@@ -710,6 +716,7 @@ const App = () => {
         <Route path="/flights/booking/:bookingId" element={<FlightBookingConfirmation />} />
         <Route path="/flights/booking-confirmation" element={<FlightBookingConfirmation />} />
         <Route path="/flight-payment" element={<FlightPayment />} />
+        <Route path="/flight-create-orders" element={<FlightCreateOrders />} />
         <Route path="/flight-booking-success" element={<FlightBookingSuccess />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/rental" element={<Rentals />} />

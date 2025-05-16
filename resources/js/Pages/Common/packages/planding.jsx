@@ -1,5 +1,5 @@
-import { Search, Calendar, ChevronDown, MapPin, Users, Star, ArrowRight, DollarSign, Tag, Heart, Plane, Sunrise, Coffee, X, Clock } from "lucide-react"
-import { useState } from "react"
+import { Search, Calendar, ChevronDown, MapPin, Users, Star, ArrowRight, DollarSign, Tag, Heart, Plane, Sunrise, Coffee, X, Clock, Sparkles } from "lucide-react"
+import { useState, useEffect } from "react"
 import packagesData from '../../../data/packages.json'
 import { Link } from "react-router-dom"
 import Navbar from '../Navbar'
@@ -15,6 +15,16 @@ const TravelPackages = () => {
   const [likedPackages, setLikedPackages] = useState([])
   const [showSearchPage, setShowSearchPage] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Combine all packages into one array for search
   // Update package images with high-quality Unsplash images
@@ -248,213 +258,227 @@ const TravelPackages = () => {
     <div className="bg-[#f8fafc] text-gray-800">
       <Navbar />
       
-      {/* Hero Section */}
-      <section
-        className="relative h-[100vh] md:h-[75vh] flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop')",
-          backgroundSize: "cover",
-          backgroundPosition: "center 30%", // Improved positioning for mobile
-        }}
-      >
-        {/* Mobile-specific background for better visibility */}
-        <div className="absolute inset-0 md:hidden bg-gradient-to-b from-black/70 via-black/50 to-black/70"></div>
-        {/* Desktop background overlay */}
-        <div className="absolute inset-0 hidden md:block bg-gradient-to-b from-black/50 via-black/30 to-black/50"></div>
-
-        <div className="container mx-auto px-4 z-10">
-          <div className="text-center mb-6 md:mb-8 animate-fadeIn">
-            <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold mb-3 md:mb-4 text-white drop-shadow-lg">
-              Discover Your Next Adventure
-            </h1>
-            <p className="text-base md:text-xl lg:text-2xl text-white font-medium drop-shadow-md px-2 md:px-0 max-w-3xl mx-auto">
-              Explore our handpicked destinations and create unforgettable memories
+      <div className="relative">
+        {/* Special Offer Banner */}
+        <div className={`absolute ${isMobileView ? 'top-[60px]' : 'top-[73px]'} w-full text-center bg-gradient-to-r from-blue-900/90 via-blue-800/90 to-blue-900/90 py-3 backdrop-blur-sm z-20 border-y border-blue-500/30 ${isMobileView ? 'px-3' : ''}`}>
+          <div className="container mx-auto px-2 flex justify-center items-center flex-wrap">
+            <Sparkles className="h-5 w-5 text-yellow-300 mr-2 flex-shrink-0" />
+            <p className={`text-white ${isMobileView ? 'text-xs' : 'text-base'} font-medium tracking-wide`}>
+              <span className="text-yellow-300 font-bold">SUMMER SPECIAL:</span> 15% OFF!{' '}
+              <span className="font-bold text-yellow-300 whitespace-nowrap">{isMobileView ? '' : 'Call '}8121716969</span>
             </p>
           </div>
-
-          {/* Mobile Form - Shown only on small screens */}
-          <form onSubmit={handleSearch} className="md:hidden bg-white/95 backdrop-blur-sm rounded-xl p-6 max-w-5xl mx-auto shadow-2xl">
-            <div className="flex flex-col gap-6">
-              <div className="w-full">
-                <label className="block text-gray-800 text-base font-medium mb-2">Destination</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Where do you want to go?"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
-                  />
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={20} />
-                </div>
-              </div>
-
-              <div className="w-full">
-                <label className="block text-gray-800 text-base font-medium mb-2">Package Type</label>
-                <div className="relative">
-                  <select
-                    value={selectedPackageType}
-                    onChange={(e) => setSelectedPackageType(e.target.value)}
-                    className="w-full p-3 pr-10 border border-gray-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
-                  >
-                    {packageTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500" size={20} />
-                </div>
-              </div>
-
-              <div className="w-full">
-                <label className="block text-gray-800 text-base font-medium mb-2">Travel Date</label>
-                <div className="relative">
-                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-500 cursor-pointer transition-all text-base">
-                    <span>Select dates</span>
-                    <Calendar size={20} className="text-blue-500" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="w-full">
-                <label className="block text-gray-800 text-base font-medium mb-2">Travelers</label>
-                <div className="relative">
-                  <div 
-                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-500 cursor-pointer transition-all text-base"
-                    onClick={() => setShowTravelersDropdown(!showTravelersDropdown)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Users size={20} className="text-blue-500" />
-                      <span>{travelers} Traveler{travelers !== 1 ? 's' : ''}</span>
-                    </div>
-                    <ChevronDown size={20} className="text-blue-500" />
-                  </div>
-                  {showTravelersDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50">
-                      {[1, 2, 3, 4, 5, 6].map((num) => (
-                        <div
-                          key={`traveler-${num}`}
-                          className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-base"
-                          onClick={() => {
-                            setTravelers(num)
-                            setShowTravelersDropdown(false)
-                          }}
-                        >
-                          <span>{num} Traveler{num !== 1 ? 's' : ''}</span>
-                          {travelers === num && <Star size={16} className="text-blue-500" />}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="w-full">
-                <button type="submit" className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 group font-medium shadow-md text-base">
-                  <Search size={20} />
-                  <span className="group-hover:translate-x-1 transition-transform">
-                    Search
-                  </span>
-                </button>
-              </div>
-            </div>
-          </form>
-
-          {/* Desktop Form - Original layout preserved */}
-          <form onSubmit={handleSearch} className="hidden md:block bg-white/95 backdrop-blur-sm rounded-xl p-8 max-w-5xl mx-auto shadow-2xl transform hover:scale-[1.02] transition-all duration-300">
-            <div className="flex flex-row gap-6">
-              <div className="flex-1">
-                <label className="block text-gray-700 text-sm font-medium mb-1">Destination</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Where do you want to go?"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full p-3 pl-10 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
-                  />
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <label className="block text-gray-700 text-sm font-medium mb-1">Package Type</label>
-                <div className="relative">
-                  <select
-                    value={selectedPackageType}
-                    onChange={(e) => setSelectedPackageType(e.target.value)}
-                    className="w-full p-3 border rounded-md appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
-                  >
-                    {packageTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <label className="block text-gray-700 text-sm font-medium mb-1">Travel Date</label>
-                <div className="relative">
-                  <div className="flex items-center justify-between p-3 border rounded-md hover:border-blue-500 cursor-pointer transition-all text-base">
-                    <span>Select dates</span>
-                    <Calendar size={18} className="text-gray-500" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <label className="block text-gray-700 text-sm font-medium mb-1">Travelers</label>
-                <div className="relative">
-                  <div 
-                    className="flex items-center justify-between p-3 border rounded-md hover:border-blue-500 cursor-pointer transition-all text-base"
-                    onClick={() => setShowTravelersDropdown(!showTravelersDropdown)}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <Users size={18} className="text-gray-500" />
-                      <span>{travelers} Traveler{travelers !== 1 ? 's' : ''}</span>
-                    </div>
-                    <ChevronDown size={18} className="text-gray-500" />
-                  </div>
-                  {showTravelersDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border z-50">
-                      {[1, 2, 3, 4, 5, 6].map((num) => (
-                        <div
-                          key={`traveler-${num}`}
-                          className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-sm"
-                          onClick={() => {
-                            setTravelers(num)
-                            setShowTravelersDropdown(false)
-                          }}
-                        >
-                          <span>{num} Traveler{num !== 1 ? 's' : ''}</span>
-                          {travelers === num && <Star size={16} className="text-blue-500" />}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-end">
-                <button type="submit" className="w-auto bg-blue-600 text-white px-8 py-3 rounded-md hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 group font-medium">
-                  <Search size={18} />
-                  <span className="text-base group-hover:translate-x-1 transition-transform">
-                    Search
-                  </span>
-                </button>
-              </div>
-            </div>
-          </form>
         </div>
+      
+        {/* Hero Section */}
+        <section
+          className="relative h-[100vh] md:h-[75vh] flex items-center justify-center overflow-hidden"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop')",
+            backgroundSize: "cover",
+            backgroundPosition: "center 30%",
+          }}
+        >
+          {/* Mobile-specific background for better visibility */}
+          <div className="absolute inset-0 md:hidden bg-gradient-to-b from-black/70 via-black/50 to-black/70"></div>
+          {/* Desktop background overlay */}
+          <div className="absolute inset-0 hidden md:block bg-gradient-to-b from-black/50 via-black/30 to-black/50"></div>
 
-        {/* Scroll Indicator - Only visible on desktop */}
-        <div className="absolute bottom-8 hidden md:block left-1/2 -translate-x-1/2 animate-bounce">
-          <div className="w-8 h-12 border-2 border-white rounded-full flex items-center justify-center">
-            <div className="w-1.5 h-3 bg-white rounded-full animate-scroll"></div>
+          <div className="container mx-auto px-4 z-10">
+            {/* Hero content */}
+            <div className="text-center mb-6 md:mb-8 animate-fadeIn">
+              <h1 className="text-3xl md:text-5xl lg:text-7xl font-bold mb-3 md:mb-4 text-white drop-shadow-lg">
+                Discover Your Next Adventure
+              </h1>
+              <p className="text-base md:text-xl lg:text-2xl text-white font-medium drop-shadow-md px-2 md:px-0 max-w-3xl mx-auto">
+                Explore our handpicked destinations and create unforgettable memories
+              </p>
+            </div>
+
+            {/* Mobile Form - Shown only on small screens */}
+            <form onSubmit={handleSearch} className="md:hidden bg-white/95 backdrop-blur-sm rounded-xl p-6 max-w-5xl mx-auto shadow-2xl">
+              <div className="flex flex-col gap-6">
+                <div className="w-full">
+                  <label className="block text-gray-800 text-base font-medium mb-2">Destination</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Where do you want to go?"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
+                    />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={20} />
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-gray-800 text-base font-medium mb-2">Package Type</label>
+                  <div className="relative">
+                    <select
+                      value={selectedPackageType}
+                      onChange={(e) => setSelectedPackageType(e.target.value)}
+                      className="w-full p-3 pr-10 border border-gray-200 rounded-lg appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
+                    >
+                      {packageTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500" size={20} />
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-gray-800 text-base font-medium mb-2">Travel Date</label>
+                  <div className="relative">
+                    <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-500 cursor-pointer transition-all text-base">
+                      <span>Select dates</span>
+                      <Calendar size={20} className="text-blue-500" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-gray-800 text-base font-medium mb-2">Travelers</label>
+                  <div className="relative">
+                    <div 
+                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:border-blue-500 cursor-pointer transition-all text-base"
+                      onClick={() => setShowTravelersDropdown(!showTravelersDropdown)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users size={20} className="text-blue-500" />
+                        <span>{travelers} Traveler{travelers !== 1 ? 's' : ''}</span>
+                      </div>
+                      <ChevronDown size={20} className="text-blue-500" />
+                    </div>
+                    {showTravelersDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50">
+                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                          <div
+                            key={`traveler-${num}`}
+                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-base"
+                            onClick={() => {
+                              setTravelers(num)
+                              setShowTravelersDropdown(false)
+                            }}
+                          >
+                            <span>{num} Traveler{num !== 1 ? 's' : ''}</span>
+                            {travelers === num && <Star size={16} className="text-blue-500" />}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <button type="submit" className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 group font-medium shadow-md text-base">
+                    <Search size={20} />
+                    <span className="group-hover:translate-x-1 transition-transform">
+                      Search
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* Desktop Form - Original layout preserved */}
+            <form onSubmit={handleSearch} className="hidden md:block bg-white/95 backdrop-blur-sm rounded-xl p-8 max-w-5xl mx-auto shadow-2xl transform hover:scale-[1.02] transition-all duration-300">
+              <div className="flex flex-row gap-6">
+                <div className="flex-1">
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Destination</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Where do you want to go?"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full p-3 pl-10 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
+                    />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Package Type</label>
+                  <div className="relative">
+                    <select
+                      value={selectedPackageType}
+                      onChange={(e) => setSelectedPackageType(e.target.value)}
+                      className="w-full p-3 border rounded-md appearance-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
+                    >
+                      {packageTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Travel Date</label>
+                  <div className="relative">
+                    <div className="flex items-center justify-between p-3 border rounded-md hover:border-blue-500 cursor-pointer transition-all text-base">
+                      <span>Select dates</span>
+                      <Calendar size={18} className="text-gray-500" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-gray-700 text-sm font-medium mb-1">Travelers</label>
+                  <div className="relative">
+                    <div 
+                      className="flex items-center justify-between p-3 border rounded-md hover:border-blue-500 cursor-pointer transition-all text-base"
+                      onClick={() => setShowTravelersDropdown(!showTravelersDropdown)}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Users size={18} className="text-gray-500" />
+                        <span>{travelers} Traveler{travelers !== 1 ? 's' : ''}</span>
+                      </div>
+                      <ChevronDown size={18} className="text-gray-500" />
+                    </div>
+                    {showTravelersDropdown && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border z-50">
+                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                          <div
+                            key={`traveler-${num}`}
+                            className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-sm"
+                            onClick={() => {
+                              setTravelers(num)
+                              setShowTravelersDropdown(false)
+                            }}
+                          >
+                            <span>{num} Traveler{num !== 1 ? 's' : ''}</span>
+                            {travelers === num && <Star size={16} className="text-blue-500" />}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-end">
+                  <button type="submit" className="w-auto bg-blue-600 text-white px-8 py-3 rounded-md hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 group font-medium">
+                    <Search size={18} />
+                    <span className="text-base group-hover:translate-x-1 transition-transform">
+                      Search
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
-        </div>
-      </section>
+
+          {/* Scroll Indicator - Only visible on desktop */}
+          <div className="absolute bottom-8 hidden md:block left-1/2 -translate-x-1/2 animate-bounce">
+            <div className="w-8 h-12 border-2 border-white rounded-full flex items-center justify-center">
+              <div className="w-1.5 h-3 bg-white rounded-full animate-scroll"></div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* Stats Section */}
       <section className="py-12 bg-white">

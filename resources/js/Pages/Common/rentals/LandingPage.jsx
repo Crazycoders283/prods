@@ -30,6 +30,7 @@ import {
 import { popularDestinations } from "./hotel"
 import { useState, useEffect, useRef } from "react"
 import axios from 'axios';
+import apiConfig from '../../../../../src/config/api.js';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -119,7 +120,7 @@ export default function LandingPage() {
         checkOutDate: selectedEndDate?.toISOString()
       });
 
-      const response = await axios.get(import.meta.env.VITE_APP_URL+'hotels/search', {
+      const response = await axios.get(apiConfig.endpoints.hotels.search, {
         params: {
           destination: cityCode,
           dates: searchDates !== "Select dates" ? searchDates : undefined,

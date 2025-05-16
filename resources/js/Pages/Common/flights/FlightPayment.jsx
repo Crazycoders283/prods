@@ -172,9 +172,11 @@ function FlightPayment() {
       
       if (isSuccess) {
         setTimeout(() => {
-          navigate("/flight-booking-success", { 
+          // Navigate to the Flight Create Orders page instead of success page
+          navigate("/flight-create-orders", { 
             state: { 
               ...paymentData,
+              paymentSuccess: true,
               paymentMethod: activePaymentMethod,
               calculatedFare: {
                 ...paymentData?.calculatedFare,

@@ -4,6 +4,7 @@ import { Star, MapPin, Wifi, Coffee, Tv, Users, Heart, ArrowLeft, Search, X, Glo
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import axios from 'axios';
+import apiConfig from '../../../../../src/config/api.js';
 
 export default function HotelSearchResults() {
   const location = useLocation();
@@ -85,7 +86,7 @@ export default function HotelSearchResults() {
     setSearchError(null);
 
     try {
-      const response = await axios.get(import.meta.env.VITE_APP_URL+'hotels/search', {
+      const response = await axios.get(apiConfig.endpoints.hotels.search, {
         params: {
           destination: cityCode,
           checkInDate: selectedStartDate.toISOString().split('T')[0],
@@ -180,7 +181,7 @@ export default function HotelSearchResults() {
         setIsLoading(true);
         setError(null);
         try {
-          const response = await axios.get('http://localhost:5001/api/hotels/search', {
+          const response = await axios.get(apiConfig.endpoints.hotels.search, {
             params: {
               destination: searchParams.cityCode,
               checkInDate: searchParams.checkInDate,

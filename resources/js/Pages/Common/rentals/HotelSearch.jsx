@@ -4,6 +4,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { FaSearch, FaCalendarAlt, FaUser } from 'react-icons/fa';
 import axios from 'axios';
+import apiConfig from '../../../../../src/config/api.js';
 
 const HotelSearch = () => {
  
@@ -91,7 +92,7 @@ const hotels = location.state?.hotels;
       // Format dates as YYYY-MM-DD
       const formattedDates = `${searchParams.checkInDate} - ${searchParams.checkOutDate}`;
 
-      const response = await axios.post('/api/hotels/search', {
+      const response = await axios.post(apiConfig.endpoints.hotels.search, {
         destination: searchParams.cityCode,
         dates: formattedDates,
         travelers: searchParams.adults,

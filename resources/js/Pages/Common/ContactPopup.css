@@ -23,6 +23,36 @@
   animation: slideIn 0.4s ease;
 }
 
+/* Contact Us Button Container */
+.contact-us-container {
+  position: fixed;
+  bottom: 90px; /* Position above the AI chatbot button */
+  right: 20px;
+  z-index: 999;
+}
+
+.contact-us-button {
+  width: auto;
+  padding: 10px 15px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #036cca, #0d99ff);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.contact-us-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
 .close-button {
   position: absolute;
   top: 15px;

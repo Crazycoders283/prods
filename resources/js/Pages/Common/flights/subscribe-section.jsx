@@ -146,7 +146,7 @@ export default function SubscribeSection() {
               </div>
               
               <h2 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight drop-shadow-md">
-                GET <span className="text-yellow-400">50% OFF</span> ON YOUR NEXT FLIGHT BOOKING!
+                GET <span className="text-yellow-400">10% OFF</span> ON YOUR NEXT FLIGHT BOOKING!
               </h2>
               
               <div className="flex gap-6 mb-8 flex-wrap">
@@ -287,7 +287,7 @@ export default function SubscribeSection() {
                       }`}
                       disabled={!email || !consent}
                     >
-                      <span className="relative z-10">GET 50% OFF MY NEXT FLIGHT</span>
+                      <span className="relative z-10">GET 10% OFF MY NEXT FLIGHT</span>
                       {email && consent && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-full h-full bg-gradient-to-r from-blue-500 to-blue-700 absolute"></div>
