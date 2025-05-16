@@ -14,7 +14,7 @@ const Footer = () => {
         <div className="footer-section">
           <div className="footer-logo">
             <Link to="/">
-              <img src="/images/logo.png" alt="JET SETTERS" className="logo-image" />
+              <img src="https://source.unsplash.com/rTZW4f02zY8/800x600" alt="JET SETTERS" className="logo-image" />
             </Link>
           </div>
           <div className="footer-about">
