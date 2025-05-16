@@ -256,7 +256,25 @@ function FlightLanding() {
       };
 
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || '/api/';
+        // Fix API URL format issues
+        let apiBaseUrl = import.meta.env.VITE_API_URL || '';
+        
+        // Check if the URL needs protocol prefixing
+        if (apiBaseUrl && !apiBaseUrl.startsWith('http') && !apiBaseUrl.startsWith('/')) {
+          apiBaseUrl = 'https://' + apiBaseUrl;
+        }
+        
+        // Default to local API if no URL is provided
+        if (!apiBaseUrl) {
+          apiBaseUrl = '/api/';
+        }
+        
+        // Ensure URL ends with a slash
+        if (apiBaseUrl && !apiBaseUrl.endsWith('/')) {
+          apiBaseUrl += '/';
+        }
+        
+        console.log('Using API URL:', apiBaseUrl);
         const response = await axios.post(`${apiBaseUrl}flights/search`, searchData, {
           headers: {
             "Content-Type": "application/json",
