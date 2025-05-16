@@ -52,7 +52,7 @@
     "build": {
         "env": {
             "VITE_APP_NAME": "JetSet App",
-            "VITE_API_URL": "https://jetset-app-frontend.vercel.app/api"
+            "VITE_API_URL": "https://jet-set-go-psi.vercel.app/api"
         }
     }
 }
