@@ -30,21 +30,6 @@ package-lock.json
 .vercel
 .npm
 .node_repl_history
-vercel-build.js
-vercel-setup.js
-vercel.json
-.vercelignore
-
-# Netlify
-.netlify/
-netlify/
-netlify.toml
-
-# Render
-render.yaml
-render-setup.js
-render-build.js
-render-build.sh
 
 # Testing
 coverage/
@@ -61,8 +46,6 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
-.env.node
-.env.render
 
 # Editor files
 .idea/
@@ -74,17 +57,3 @@ dist/
 *.sw?
 .DS_Store
 Thumbs.db
-
-# Database
-database/database.sqlite
-*.sqlite
-
-# Certificates
-certs/
-
-# Build scripts
-*.sh
-
-# Large files
-*.zip
-public.zip
