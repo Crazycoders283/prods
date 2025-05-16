@@ -94,9 +94,9 @@ export default function HotelDetails() {
         setIsLoading(true);
         
         // Fetch actual hotel details from API
-        if (hotelData && hotelData.id) {
+        if (currentHotelData && currentHotelData.id) {
           try {
-            const response = await axios.get(apiConfig.endpoints.hotels.booking + `/${hotelData.id}`, {
+            const response = await axios.get(apiConfig.endpoints.hotels.booking + `/${currentHotelData.id}`, {
               params: {
                 checkInDate: formatDate(checkInDate),
                 checkOutDate: formatDate(checkOutDate),
@@ -110,14 +110,17 @@ export default function HotelDetails() {
               const apiHotelDetails = response.data.data;
               
               // Update hotelData with API details
-              hotelData = {
-                ...hotelData,
-                name: apiHotelDetails.name || hotelData.name,
-                description: apiHotelDetails.description || hotelData.description,
-                formattedAddress: apiHotelDetails.formattedAddress || hotelData.location,
+              const updatedHotelData = {
+                ...currentHotelData,
+                name: apiHotelDetails.name || currentHotelData.name,
+                description: apiHotelDetails.description || currentHotelData.description,
+                formattedAddress: apiHotelDetails.formattedAddress || currentHotelData.location,
                 phone: apiHotelDetails.phone || 'Phone not available',
                 email: apiHotelDetails.email || 'Email not available'
               };
+              
+              // Use the updated data
+              setCurrentHotelData(updatedHotelData);
               
               console.log('API hotel details:', apiHotelDetails);
             }
@@ -130,8 +133,8 @@ export default function HotelDetails() {
         // Default values
         const defaultPrice = 199;
         const defaultRating = 4.5;
-        const basePrice = parseFloat(hotelData?.price) || defaultPrice;
-        const hotelRating = parseFloat(hotelData?.rating) || defaultRating;
+        const basePrice = parseFloat(currentHotelData?.price) || defaultPrice;
+        const hotelRating = parseFloat(currentHotelData?.rating) || defaultRating;
 
         const mockRoomTypes = [
           {
@@ -256,18 +259,18 @@ export default function HotelDetails() {
 
         // Create hotel object with guaranteed image properties
         setSelectedHotel({
-          ...hotelData,
-          longDescription: hotelData.description || 'Experience luxury and comfort at our hotel.',
-          address: hotelData.formattedAddress || hotelData.location || 'Address not available',
+          ...currentHotelData,
+          longDescription: currentHotelData.description || 'Experience luxury and comfort at our hotel.',
+          address: currentHotelData.formattedAddress || currentHotelData.location || 'Address not available',
           reviewCount: 128,
-          amenities: hotelData.amenities || ['WiFi', 'Room Service', 'Restaurant'],
+          amenities: currentHotelData.amenities || ['WiFi', 'Room Service', 'Restaurant'],
           images: {
-            main: hotelData.images?.main || defaultImagePlaceholder,
-            gallery: hotelData.images?.gallery || defaultGalleryImages
+            main: currentHotelData.images?.main || defaultImagePlaceholder,
+            gallery: currentHotelData.images?.gallery || defaultGalleryImages
           },
           contactInfo: {
-            phone: hotelData.phone || 'Phone not available',
-            email: hotelData.email || 'Email not available'
+            phone: currentHotelData.phone || 'Phone not available',
+            email: currentHotelData.email || 'Email not available'
           }
         });
 
@@ -282,7 +285,7 @@ export default function HotelDetails() {
     if (location.state?.hotelData) {
       fetchHotelDetails();
     }
-  }, [location.state?.hotelData, hotelData]);
+  }, [location.state?.hotelData, currentHotelData]);
 
   useEffect(() => {
     const fetchHotelOffer = async () => {
@@ -478,7 +481,7 @@ export default function HotelDetails() {
       // Use the correct endpoint for checking availability
       const response = await axios.get(apiConfig.endpoints.hotels.offers + '/check-availability', {
         params: {
-          destination: hotelData.id,
+          destination: currentHotelData.id,
           checkInDate: formattedCheckIn,
           checkOutDate: formattedCheckOut,
           travelers: guestCount.adults
