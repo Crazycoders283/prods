@@ -1,0 +1,132 @@
+{
+    "destinations": [
+      {
+        "id": 1,
+        "name": "Caribbean",
+        "price": 699,
+        "rating": 4.7,
+        "image": "/images/Rectangle 1434 (1).png",
+        "country": "Multiple",
+        "category": "Tropical",
+        "tags": ["Beach", "Tropical", "Culture"],
+        "duration": "7-10 days",
+        "season": "All Year",
+        "cruiseLines": ["Royal Caribbean", "Norwegian Cruise Line", "Celebrity Cruises", "Disney Cruise Line", "Princess Cruises"]
+      },
+      {
+        "id": 2,
+        "name": "Mediterranean",
+        "price": 899,
+        "rating": 4.8,
+        "image": "/images/Rectangle 1434 (2).png",
+        "country": "Multiple",
+        "category": "Cultural",
+        "tags": ["Culture", "History", "Beach"],
+        "duration": "7-14 days",
+        "season": "Summer",
+        "cruiseLines": ["Norwegian Cruise Line", "Celebrity Cruises", "Disney Cruise Line", "Princess Cruises"]
+      },
+      {
+        "id": 3,
+        "name": "Alaska",
+        "price": 799,
+        "rating": 4.9,
+        "image": "/images/Rectangle 1434 (3).png",
+        "country": "USA/Canada",
+        "category": "Nature",
+        "tags": ["Wildlife", "Glaciers", "Scenic"],
+        "duration": "7-10 days",
+        "season": "Summer",
+        "cruiseLines": ["Royal Caribbean", "Norwegian Cruise Line", "Celebrity Cruises", "Disney Cruise Line", "Princess Cruises"]
+      },
+      {
+        "id": 4,
+        "name": "Bahamas",
+        "price": 599,
+        "rating": 4.7,
+        "image": "/images/Rectangle 1434 (4).png",
+        "country": "Bahamas",
+        "category": "Tropical",
+        "tags": ["Beach", "Tropical", "Islands"],
+        "duration": "3-7 days",
+        "season": "All Year",
+        "cruiseLines": ["Royal Caribbean", "Disney Cruise Line"]
+      },
+      {
+        "id": 5,
+        "name": "Europe",
+        "price": 999,
+        "rating": 4.8,
+        "image": "/images/Rectangle 1434 (5).png",
+        "country": "Multiple",
+        "category": "Cultural",
+        "tags": ["Culture", "History", "Cities"],
+        "duration": "7-14 days",
+        "season": "Summer",
+        "cruiseLines": ["Royal Caribbean", "Norwegian Cruise Line", "Celebrity Cruises", "Disney Cruise Line", "Princess Cruises"]
+      },
+      {
+        "id": 6,
+        "name": "Asia",
+        "price": 1099,
+        "rating": 4.7,
+        "image": "/images/Rectangle 1434.png",
+        "country": "Multiple",
+        "category": "Cultural",
+        "tags": ["Culture", "History", "Food"],
+        "duration": "10-14 days",
+        "season": "All Year",
+        "cruiseLines": ["Royal Caribbean", "Celebrity Cruises", "Princess Cruises"]
+      },
+      {
+        "id": 7,
+        "name": "Australia/New Zealand",
+        "price": 1199,
+        "rating": 4.8,
+        "image": "/images/Rectangle 1434 (1).png",
+        "country": "Australia/New Zealand",
+        "category": "Nature",
+        "tags": ["Wildlife", "Nature", "Culture"],
+        "duration": "10-14 days",
+        "season": "Summer",
+        "cruiseLines": ["Royal Caribbean", "Celebrity Cruises", "Princess Cruises"]
+      },
+      {
+        "id": 8,
+        "name": "Hawaii",
+        "price": 899,
+        "rating": 4.9,
+        "image": "/images/Rectangle 1434 (2).png",
+        "country": "USA",
+        "category": "Tropical",
+        "tags": ["Beach", "Tropical", "Culture"],
+        "duration": "7-10 days",
+        "season": "All Year",
+        "cruiseLines": ["Norwegian Cruise Line", "Princess Cruises"]
+      },
+      {
+        "id": 9,
+        "name": "South America",
+        "price": 999,
+        "rating": 4.7,
+        "image": "/images/Rectangle 1434 (3).png",
+        "country": "Multiple",
+        "category": "Cultural",
+        "tags": ["Culture", "History", "Nature"],
+        "duration": "10-14 days",
+        "season": "Summer",
+        "cruiseLines": ["Norwegian Cruise Line", "Celebrity Cruises", "Princess Cruises"]
+      }
+    ],
+    "categories": [
+      "All",
+      "Tropical",
+      "Cultural",
+      "Nature"
+    ],
+    "filters": {
+      "duration": ["3-7 days", "7-10 days", "10-14 days", "14+ days"],
+      "season": ["All Year", "Summer", "Winter", "Spring"],
+      "tags": ["Beach", "Culture", "History", "Wildlife", "Glaciers", "Scenic", "Tropical", "Islands", "Food", "Cities"]
+    }
+  }

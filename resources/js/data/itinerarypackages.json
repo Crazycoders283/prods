@@ -1,0 +1,289 @@
+{
+  "dubai": {
+    "packages": [
+      {
+        "id": "dxb-001",
+        "title": "Dubai City Explorer",
+        "duration": "4 nights / 5 days",
+        "inclusions": {
+          "accommodation": [
+            "4 nights stay at a 3/4/5-star hotel (based on package)"
+          ],
+          "meals": [
+            "Daily breakfast at the hotel",
+            "BBQ dinner during the Desert Safari",
+            "Dinner on the Dhow Cruise"
+          ],
+          "transfers": [
+            "Airport pick-up and drop-off",
+            "Transfers for all activities and tours as per itinerary"
+          ],
+          "tours_activities": [
+            "Dubai city tour with a professional guide",
+            "Entry tickets to Burj Khalifa (At the Top)",
+            "Desert Safari with dune bashing, camel rides, and cultural shows",
+            "Dhow Cruise Dinner on Dubai Creek or Marina"
+          ]
+        },
+        "exclusions": {
+          "flights": [
+            "International or domestic airfare to/from Dubai"
+          ],
+          "personal_expenses": [
+            "Shopping, tips, and personal activities not included in the itinerary",
+            "Extra meals and beverages beyond what is mentioned"
+          ],
+          "optional_activities": [
+            "Ski Dubai tickets, Global Village/Miracle Garden entry fees, or Museum of the Future",
+            "Adventure sports like zip-lining, skydiving, or hot air ballooning"
+          ],
+          "travel_insurance": [
+            "Travel and medical insurance are not covered"
+          ],
+          "visa_fees": [
+            "UAE tourist visa costs (if applicable)"
+          ]
+        },
+        "itinerary": [
+          {
+            "day": 1,
+            "title": "Arrival In Dubai",
+            "activities": [
+              {
+                "time": "Evening",
+                "description": "Enjoy a relaxing Dhow Cruise Dinner on Dubai Creek with stunning views of the city skyline"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel"
+              }
+            ]
+          },
+          {
+            "day": 2,
+            "title": "City Tour & Burj Khalifa Dubai",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Half-day guided Dubai city tour",
+                "details": [
+                  "Visit the Dubai Museum at Al Fahidi Fort",
+                  "Stop by Jumeirah Mosque and Burj Al Arab for photo ops",
+                  "Explore the Palm Jumeirah and Atlantis Hotel"
+                ]
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit the Dubai Mall and shop or explore the Dubai Aquarium"
+              },
+              {
+                "time": "Evening",
+                "description": "Ascend the Burj Khalifa (At the Top) to witness breathtaking city views"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel"
+              }
+            ]
+          },
+          {
+            "day": 3,
+            "title": "Desert Safari Adventure",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Free time for leisure or optional activities"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Desert Safari experience",
+                "details": [
+                  "Thrilling dune bashing",
+                  "Camel riding",
+                  "Sand boarding",
+                  "Traditional Arabic welcome with coffee and dates",
+                  "BBQ dinner under the stars",
+                  "Cultural performances including belly dancing"
+                ]
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel"
+              }
+            ]
+          },
+          {
+            "day": 4,
+            "title": "Modern Dubai Exploration",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Visit Dubai Marina and JBR Walk"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Optional visit to Global Village or Miracle Garden (seasonal)"
+              },
+              {
+                "time": "Evening",
+                "description": "Free time for shopping or relaxation"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel"
+              }
+            ]
+          },
+          {
+            "day": 5,
+            "title": "Departure",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Breakfast at hotel and check-out"
+              },
+              {
+                "time": "Transfer",
+                "description": "Airport transfer for departure"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "europe": {
+    "packages": [
+      {
+        "id": "eur-001",
+        "title": "European Discovery",
+        "duration": "7 nights / 8 days",
+        "inclusions": {
+          "accommodation": [
+            "7 nights stay at 4-star hotels"
+          ],
+          "meals": [
+            "Daily breakfast at hotels",
+            "Welcome dinner in Paris",
+            "Traditional dinner in Rome"
+          ],
+          "transfers": [
+            "Airport transfers",
+            "Inter-city train transfers",
+            "Local transportation passes"
+          ],
+          "tours_activities": [
+            "Guided city tours in each city",
+            "Skip-the-line entry to major attractions",
+            "Seine River cruise in Paris",
+            "Colosseum tour in Rome"
+          ]
+        },
+        "itinerary": [
+          {
+            "day": 1,
+            "title": "Arrival in Paris",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Arrival and hotel check-in"
+              },
+              {
+                "time": "Evening",
+                "description": "Seine River dinner cruise"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "kashmir": {
+    "packages": [
+      {
+        "id": "ksh-001",
+        "title": "Kashmir Paradise",
+        "duration": "5 nights / 6 days",
+        "inclusions": {
+          "accommodation": [
+            "5 nights in luxury houseboats and hotels"
+          ],
+          "meals": [
+            "All meals included",
+            "Traditional Kashmiri cuisine experiences"
+          ],
+          "transfers": [
+            "Airport transfers",
+            "All local sightseeing transfers"
+          ],
+          "tours_activities": [
+            "Shikara ride on Dal Lake",
+            "Mughal Gardens tour",
+            "Gulmarg Gondola ride",
+            "Pahalgam valley tour"
+          ]
+        },
+        "itinerary": [
+          {
+            "day": 1,
+            "title": "Arrival in Srinagar",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Airport pickup and houseboat check-in"
+              },
+              {
+                "time": "Evening",
+                "description": "Shikara ride on Dal Lake"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "northEast": {
+    "packages": [
+      {
+        "id": "ne-001",
+        "title": "Northeast Explorer",
+        "duration": "6 nights / 7 days",
+        "inclusions": {
+          "accommodation": [
+            "6 nights in hotels and traditional homestays"
+          ],
+          "meals": [
+            "All meals included",
+            "Local cuisine experiences"
+          ],
+          "transfers": [
+            "Airport transfers",
+            "All local transportation"
+          ],
+          "tours_activities": [
+            "Living root bridges trek",
+            "River rafting in Arunachal",
+            "Tea garden visits",
+            "Cultural village tours"
+          ]
+        },
+        "itinerary": [
+          {
+            "day": 1,
+            "title": "Arrival in Guwahati",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Airport pickup and hotel check-in"
+              },
+              {
+                "time": "Evening",
+                "description": "Visit Kamakhya Temple"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+} 

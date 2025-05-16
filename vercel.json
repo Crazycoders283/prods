@@ -1,0 +1,56 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "server.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist",
+                "buildCommand": "npm run build && node vercel-setup.js"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/assets/(.*)",
+            "headers": {
+                "cache-control": "public, max-age=31536000, immutable"
+            },
+            "dest": "/assets/$1"
+        },
+        {
+            "src": "/(.*)\\.(js|css|json|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$",
+            "headers": {
+                "cache-control": "public, max-age=31536000, immutable"
+            },
+            "dest": "/$1"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "server.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
+        }
+    ],
+    "env": {
+        "NODE_ENV": "production",
+        "JWT_EXPIRE": "30d",
+        "SUPABASE_URL": "https://qqmagqwumjipdqvxbiqu.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbWFncXd1bWppcGRxdnhiaXF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMDEwMTIsImV4cCI6MjA2MDU3NzAxMn0.Ho8DYLWpX_vQ6syrI2zkU3G5pnNTdnYpgtpyjjGYlDA",
+        "JWT_SECRET": "e4f8a2b5c9d3f7e1a0b5c8d2e6f3a9b7d1e0f5a2c4b8e3d7f9a1c5b0e2d4f8",
+        "CORS_ORIGIN": "*",
+        "RESEND_API_KEY": "re_4tfvwTmv_9kPKorQAcpZmZcZ4i744cC1Q" 
+    },
+    "build": {
+        "env": {
+            "VITE_APP_NAME": "JetSet App",
+            "VITE_API_URL": "/api"
+        }
+    }
+}

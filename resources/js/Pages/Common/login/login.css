@@ -1,0 +1,222 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400&family=Work+Sans:wght@400&display=swap');
+
+/* Login Container */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f3f4f6;
+  font-family: 'Work Sans', sans-serif; /* Default font for all content */
+}
+
+/* Login Card */
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0px 4px 6px rgba(2, 8, 61, 0.712);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Image Section */
+.login-image {
+  height: 160px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 100%;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Login Content */
+.login-content {
+  padding: 2rem;
+  flex-grow: 1;
+}
+
+.login-title {
+  font-size: 2.5rem; /* Adjusted size to 40px */
+  font-weight: 600; /* Semi-bold weight */
+  color: #0855A2;
+  margin-bottom: 1.5rem;
+  text-align: left; /* Left-align the heading */
+  font-family: 'Poppins', sans-serif; /* Specific font for the Login heading */
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Form Labels (Email & Password) */
+.form-group label {
+  font-size: 16px; /* Set label font size */
+  font-weight: 400; /* Regular weight */
+  color: #06457A; /* Label color */
+  font-family: 'Poppins', sans-serif; /* Use Poppins Regular font for labels */
+}
+
+/* Input Fields (Username and Password) */
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #111111;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  color: #000000; /* Ensures input text is black */
+  font-family: 'Poppins', sans-serif; /* Use Poppins for input text */
+}
+
+.form-input::placeholder {
+  color: #000000; /* Black placeholder text */
+  opacity: 1; /* Ensures placeholder is visible */
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #06457A;
+  box-shadow: 0 0 0 1px #06457A;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #111111;
+}
+
+/* Forgot Password Styling */
+.forgot-password {
+  color: #06457A;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* Sign In Button Styling */
+.login-button {
+  background-color: #0855A2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.login-button:hover {
+  background-color: #06457A;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #6B7280;
+  font-size: 0.875rem;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.login-divider::before {
+  margin-right: 0.5rem;
+}
+
+.login-divider::after {
+  margin-left: 0.5rem;
+}
+
+/* Social Login */
+.social-login {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.social-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #E5E7EB;
+  background-color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.social-button img {
+  width: 24px;
+  height: 24px;
+}
+
+.social-button:hover {
+  background-color: #F3F4F6;
+}
+
+/* Optional Specific Email Button Styling */
+.social-button img[alt="Email"] {
+  width: 20px;
+  height: 20px;
+}
+
+/* By Proceeding Sentence Styling */
+.login-footer {
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: #6B7280;
+  text-align: center;
+}
+
+/* Links in text */
+.text-link {
+  color: #06457A;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+/* Error Messages */
+.error-message {
+  color: #DC2626;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Signup specific styles */
+.signup-link {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #111111;
+}
