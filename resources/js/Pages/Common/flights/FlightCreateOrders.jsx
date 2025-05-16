@@ -9,7 +9,7 @@ import axios from 'axios';
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import withPageElements from '../PageWrapper';
-import { endpoints } from '../../../../config/api';
+import { endpoints } from '../../../../../src/config/api';
 
 function FlightCreateOrders() {
   const location = useLocation();
