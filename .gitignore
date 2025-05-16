@@ -84,3 +84,7 @@ certs/
 
 # Build scripts
 *.sh
+
+# Large files
+*.zip
+public.zip
