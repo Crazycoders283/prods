@@ -38,7 +38,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Add headers for additional CORS support
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+  // Set CORS headers for all responses
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-csrf-token');
@@ -48,6 +49,9 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+  
+  // Log the request for debugging
+  console.log(`💫 CORS headers set for ${req.method} ${req.url}`);
   next();
 });
 
