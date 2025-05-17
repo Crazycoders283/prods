@@ -110,7 +110,7 @@ const hotels = location.state?.hotels;
         travelers: searchParams.adults
       });
 
-      const response = await axios.post(apiConfig.endpoints.hotels.search, {
+      const response = await axios.post('https://jet-set-go-psi.vercel.app/api/hotels/search', {
         destination: searchParams.cityCode,
         checkInDate: formattedCheckInDate,
         checkOutDate: formattedCheckOutDate,

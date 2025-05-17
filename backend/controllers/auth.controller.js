@@ -22,25 +22,45 @@ export const googleLogin = async (req, res) => {
     const { token } = req.body;
     
     if (!token) {
-      return res.status(400).json({ message: 'Google token is required' });
+      console.error('Missing token in request body');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Google token is required' 
+      });
     }
     
     try {
+      console.log('Verifying token with Google');
       // Verify the token with Google
       const googleResponse = await axios.get(
         `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`
       );
       
+      console.log('Google verification successful:', {
+        email: googleResponse.data.email,
+        name: `${googleResponse.data.given_name} ${googleResponse.data.family_name}`,
+      });
+      
       const { email, given_name, family_name, sub: googleId } = googleResponse.data;
       
+      if (!email) {
+        console.error('Google response missing email');
+        return res.status(400).json({ 
+          success: false,
+          message: 'Google authentication failed: Missing email in response' 
+        });
+      }
+      
       // Check if user exists
+      console.log('Looking for existing user with email:', email);
       let user = await User.findByEmail(email);
       
       if (!user) {
+        console.log('User not found, creating new account');
         // Create a new user if doesn't exist
         user = await User.create({
-          firstName: given_name,
-          lastName: family_name,
+          firstName: given_name || 'User',
+          lastName: family_name || '',
           email,
           googleId,
           password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
@@ -48,14 +68,17 @@ export const googleLogin = async (req, res) => {
         });
         console.log('New Google user created:', { id: user.id, email });
       } else {
+        console.log('Existing user found:', { id: user.id, email });
         // Update Google ID if not set
         if (!user.googleId) {
+          console.log('Updating existing user with Google ID');
           await User.update(user.id, { googleId, isGoogleAccount: true });
           console.log('Updated existing user with Google ID:', { id: user.id });
         }
       }
       
       // Generate JWT
+      console.log('Generating JWT token for user:', { id: user.id });
       const jwtToken = jwt.sign(
         { id: user.id },
         JWT_SECRET,
@@ -65,7 +88,8 @@ export const googleLogin = async (req, res) => {
       console.log('Google user authenticated successfully:', { id: user.id, email });
       
       // Return user data and token
-      res.json({
+      return res.status(200).json({
+        success: true,
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -75,14 +99,34 @@ export const googleLogin = async (req, res) => {
       });
       
     } catch (error) {
-      console.error('Google token verification error:', error.response?.data || error.message);
-      return res.status(401).json({ message: 'Invalid Google token' });
+      console.error('Google token verification error details:', error);
+      
+      // Handle different error scenarios
+      if (error.response) {
+        console.error('Google API response error:', {
+          status: error.response.status,
+          data: error.response.data
+        });
+        
+        return res.status(401).json({ 
+          success: false,
+          message: 'Invalid Google token: ' + (error.response.data.error_description || error.response.statusText),
+          details: error.response.data
+        });
+      }
+      
+      console.error('Google token verification failed:', error.message);
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid Google token: ' + error.message 
+      });
     }
   } catch (error) {
     console.error('Error in Google login controller:', error);
     res.status(500).json({ 
+      success: false,
       message: 'Server error during Google authentication', 
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };

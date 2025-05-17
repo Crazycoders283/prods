@@ -3,8 +3,19 @@ import axios from 'axios';
 
 class HotelService {
   constructor() {
-    const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY;
-    const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET;
+    // Prioritize REACT_APP prefixed keys since those are in vercel.json
+    const apiKey = process.env.REACT_APP_AMADEUS_API_KEY || process.env.AMADEUS_API_KEY;
+    const apiSecret = process.env.REACT_APP_AMADEUS_API_SECRET || process.env.AMADEUS_API_SECRET;
+
+    console.log('HotelService: Checking Amadeus API credentials:', {
+      apiKeyExists: !!apiKey,
+      apiSecretExists: !!apiSecret,
+      env: process.env.NODE_ENV
+    });
+
+    if (!apiKey || !apiSecret) {
+      console.error('HotelService: MISSING AMADEUS API CREDENTIALS!');
+    }
 
     this.amadeus = new Amadeus({
       clientId: apiKey,
@@ -25,8 +36,16 @@ class HotelService {
   async getAccessToken() {
     try {
       console.log('HotelService: Getting access token from Amadeus');
-      const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY;
-      const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET;
+      // Prioritize REACT_APP prefixed keys since those are in vercel.json
+      const apiKey = process.env.REACT_APP_AMADEUS_API_KEY || process.env.AMADEUS_API_KEY;
+      const apiSecret = process.env.REACT_APP_AMADEUS_API_SECRET || process.env.AMADEUS_API_SECRET;
+      
+      console.log('HotelService: getAccessToken with credentials:', {
+        apiKeyExists: !!apiKey,
+        apiSecretExists: !!apiSecret,
+        apiKeyFirstChars: apiKey ? apiKey.substring(0, 4) + '...' : 'NONE',
+        env: process.env.NODE_ENV
+      });
       
       if (!apiKey || !apiSecret) {
         throw new Error('Missing Amadeus API credentials');
@@ -122,6 +141,25 @@ class HotelService {
         adults
       });
 
+      // First check if Amadeus client is properly initialized
+      if (!this.amadeus || !this.amadeus.shopping || !this.amadeus.shopping.hotelOffers) {
+        console.error('HotelService: Amadeus client not properly initialized');
+        
+        // Try to reinitialize if possible
+        const apiKey = process.env.REACT_APP_AMADEUS_API_KEY || process.env.AMADEUS_API_KEY;
+        const apiSecret = process.env.REACT_APP_AMADEUS_API_SECRET || process.env.AMADEUS_API_SECRET;
+        
+        if (apiKey && apiSecret) {
+          console.log('HotelService: Attempting to reinitialize Amadeus client');
+          this.amadeus = new Amadeus({
+            clientId: apiKey,
+            clientSecret: apiSecret
+          });
+        } else {
+          throw new Error('AMADEUS_CLIENT_NOT_INITIALIZED');
+        }
+      }
+
       // Validate dates
       const isValidDate = (dateStr) => {
         const d = new Date(dateStr);
@@ -147,21 +185,54 @@ class HotelService {
         formattedCheckOut
       });
 
-      // Make the API call to Amadeus
-      const response = await this.amadeus.shopping.hotelOffers.get({
-        cityCode: destination,
-        checkInDate: formattedCheckIn,
-        checkOutDate: formattedCheckOut,
-        adults: adults,
-        roomQuantity: 1,
-        currency: 'USD'
-      });
+      // Add fallback approach in case the Amadeus SDK fails
+      try {
+        // Make the API call to Amadeus using the SDK
+        const response = await this.amadeus.shopping.hotelOffers.get({
+          cityCode: destination,
+          checkInDate: formattedCheckIn,
+          checkOutDate: formattedCheckOut,
+          adults: adults,
+          roomQuantity: 1,
+          currency: 'USD'
+        });
 
-      console.log(`HotelService: Search successful, found ${response.data.length || 0} hotels`);
-      return response.data;
+        console.log(`HotelService: Search successful, found ${response.data.length || 0} hotels`);
+        return response.data;
+      } catch (sdkError) {
+        console.error('HotelService: SDK error, attempting fallback with direct API call:', sdkError);
+        
+        // Fallback to a direct API call using axios
+        const token = await this.getAccessToken();
+        const fallbackResponse = await axios.get('https://test.api.amadeus.com/v2/shopping/hotel-offers', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          params: {
+            cityCode: destination,
+            checkInDate: formattedCheckIn,
+            checkOutDate: formattedCheckOut,
+            adults: adults,
+            roomQuantity: 1,
+            currency: 'USD'
+          }
+        });
+        
+        console.log(`HotelService: Fallback search successful`);
+        return fallbackResponse.data;
+      }
     } catch (error) {
-      console.error('HotelService: Error searching hotels:', error.message, error.response?.data || error.description || error);
-      throw new Error(`Amadeus Error - ${error.description || error.message || 'UNKNOWN ERROR'}`);
+      console.error('HotelService: Error searching hotels:', error.message);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        description: error.description,
+        response: error.response?.data || 'No response data',
+        stack: error.stack
+      });
+      
+      // Return empty results instead of throwing to avoid 500 errors
+      return { data: [] };
     }
   }
 

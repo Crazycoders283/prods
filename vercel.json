@@ -47,7 +47,9 @@
         "CORS_ORIGIN": "*",
         "RESEND_API_KEY": "re_4tfvwTmv_9kPKorQAcpZmZcZ4i744cC1Q",
         "REACT_APP_AMADEUS_API_KEY": "ZsgV43XBz0GbNk85zQuzvWnhARwXX4IE",
-        "REACT_APP_AMADEUS_API_SECRET": "2uFgpTVo5GA4ytwq"
+        "REACT_APP_AMADEUS_API_SECRET": "2uFgpTVo5GA4ytwq",
+        "AMADEUS_API_KEY": "ZsgV43XBz0GbNk85zQuzvWnhARwXX4IE",
+        "AMADEUS_API_SECRET": "2uFgpTVo5GA4ytwq"
     },
     "build": {
         "env": {

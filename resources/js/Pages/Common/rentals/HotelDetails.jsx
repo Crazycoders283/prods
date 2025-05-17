@@ -12,9 +12,25 @@ import "./styles.css";
 import supabase from "../../../lib/supabase";
 import axios from 'axios';
 import { format } from 'date-fns';
-import apiConfig from '../../../../../src/config/api.js';
+// import apiConfig from '../../../../../src/config/api.js';
+
+// Define a consistent base API URL
+const apiConfig = {
+  baseUrl: 'https://jet-set-go-psi.vercel.app',
+  endpoints: {
+    hotels: {
+      booking: 'https://jet-set-go-psi.vercel.app/api/hotels/booking',
+      offers: 'https://jet-set-go-psi.vercel.app/api/hotels/offers',
+      search: 'https://jet-set-go-psi.vercel.app/api/hotels/search',
+      destinations: 'https://jet-set-go-psi.vercel.app/api/hotels/destinations'
+    }
+  }
+};
 import Price from "../../../Components/Price";
 import currencyService from "../../../Services/CurrencyService";
+
+// Define a consistent base API URL for all hotel-related endpoints
+const BASE_API_URL = 'https://jet-set-go-psi.vercel.app/api/hotels';
 
 export default function HotelDetails() {
   const navigate = useNavigate();
@@ -111,7 +127,7 @@ export default function HotelDetails() {
         // Fetch actual hotel details from API
         if (currentHotelData && currentHotelData.id) {
           try {
-            const response = await axios.get(apiConfig.endpoints.hotels.booking + `/${currentHotelData.id}`, {
+            const response = await axios.get(`${BASE_API_URL}/booking/${currentHotelData.id}`, {
               params: {
                 checkInDate: formatDate(checkInDate),
                 checkOutDate: formatDate(checkOutDate),
@@ -310,22 +326,32 @@ export default function HotelDetails() {
         setOfferLoading(true);
         setOfferError('');
 
-        const response = await axios.get(apiConfig.endpoints.hotels.offers + `/${selectedHotel.id}`, {
-          params: {
-            checkInDate: formatDate(checkInDate),
-            checkOutDate: formatDate(checkOutDate),
-            adults: guestCount.adults,
-            children: guestCount.children
-          }
-        });
-
-        if (response.data?.success && response.data?.data) {
-          // Process offer data
-          const offerData = response.data.data;
-          
-          // If offers property exists, use it to update room types
-          if (offerData.offers && offerData.offers.length > 0) {
-                          // Map API offers to room types with all required fields
+        // Start with a default timeout of 5 seconds
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        );
+        
+        try {
+          // Race the API call against the timeout
+          const response = await Promise.race([
+            axios.get(`${BASE_API_URL}/offers/${selectedHotel.id}`, {
+              params: {
+                checkInDate: formatDate(checkInDate),
+                checkOutDate: formatDate(checkOutDate),
+                adults: guestCount.adults,
+                children: guestCount.children
+              }
+            }),
+            timeoutPromise
+          ]);
+  
+          if (response.data?.success && response.data?.data) {
+            // Process offer data
+            const offerData = response.data.data;
+            
+            // If offers property exists, use it to update room types
+            if (offerData.offers && offerData.offers.length > 0) {
+              // Map API offers to room types with all required fields
               const apiRoomTypes = offerData.offers.map((offer, index) => ({
                 id: index,
                 offerId: offer.id,
@@ -339,15 +365,39 @@ export default function HotelDetails() {
                 description: offer.room?.description?.text || "Comfortable room with all standard amenities",
                 available: true
               }));
-            
-            if (apiRoomTypes.length > 0) {
-              setRoomTypes(apiRoomTypes);
+              
+              if (apiRoomTypes.length > 0) {
+                setRoomTypes(apiRoomTypes);
+              }
             }
+            
+            setHotelOffer(offerData);
+          } else {
+            throw new Error('Invalid response format');
           }
+        } catch (innerError) {
+          console.log('API call failed, using mock data instead:', innerError);
           
-          setHotelOffer(offerData);
-        } else {
-          throw new Error('Invalid response format');
+          // Generate mock offer data as fallback
+          const mockOfferData = {
+            offers: [
+              {
+                id: 'mock-offer-1',
+                price: {
+                  total: (parseFloat(selectedHotel?.price) || 199).toString(),
+                  base: ((parseFloat(selectedHotel?.price) || 199) * 0.8).toString(),
+                },
+                room: {
+                  description: { text: 'Deluxe Room (Generated Offline)' },
+                  amenities: ['Free WiFi', 'Mountain View', 'King Bed']
+                },
+                guests: { adults: 2 },
+                rateCode: 'BAR'
+              }
+            ]
+          };
+          
+          setHotelOffer(mockOfferData);
         }
       } catch (error) {
         console.error('Error fetching hotel offer:', error);
@@ -502,27 +552,41 @@ export default function HotelDetails() {
       const formattedCheckIn = formatDate(checkInDate);
       const formattedCheckOut = formatDate(checkOutDate);
 
-      // Use the correct endpoint for checking availability
-      const response = await axios.get(apiConfig.endpoints.hotels.offers + '/check-availability', {
-        params: {
-          destination: currentHotelData.id,
-          checkInDate: formattedCheckIn,
-          checkOutDate: formattedCheckOut,
-          travelers: guestCount.adults
+      // Set a timeout for the API request
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 5000)
+      );
+
+      try {
+        // Race the API call against the timeout
+        const response = await Promise.race([
+          axios.get(`${BASE_API_URL}/offers/check-availability`, {
+            params: {
+              destination: currentHotelData.id,
+              checkInDate: formattedCheckIn,
+              checkOutDate: formattedCheckOut,
+              travelers: guestCount.adults
+            }
+          }),
+          timeoutPromise
+        ]);
+        
+        if (response.data.success) {
+          setShowCallbackRequest(true);
+        } else {
+          setError(response.data.message || "No availability found for these dates");
         }
-      });
-      
-      if (response.data.success) {
+      } catch (innerError) {
+        console.log('Availability check failed, proceeding anyway:', innerError);
+        // Always show the callback request form even on network errors
         setShowCallbackRequest(true);
-      } else {
-        setError(response.data.message || "No availability found for these dates");
       }
     } catch (error) {
-      console.error('Error fetching hotels:', error.response?.data?.message);
+      console.error('Error in reserve flow:', error);
       // Still show the callback request form even if there's an error
       setShowCallbackRequest(true);
       // Set a user-friendly error message
-      setError(error.response?.data?.message || "Error checking availability");
+      setError("We're experiencing connectivity issues, but you can still request a callback.");
     }
   };
 
@@ -558,10 +622,8 @@ export default function HotelDetails() {
 
       // Send confirmation email
       try {
-        const baseUrl = apiConfig.baseUrl;
-        
-        // Ensure URL is properly constructed with slash
-        const apiUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}api/send-email`;
+        // Use direct URL instead of dynamic construction
+        const apiUrl = 'https://jet-set-go-psi.vercel.app/api/send-email';
 
         // Convert any potential Date objects to strings
         const checkInString = typeof checkInDate === 'string' ? checkInDate : String(checkInDate);

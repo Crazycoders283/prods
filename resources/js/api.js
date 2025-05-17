@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-// Determine API URL based on environment
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://jet-set-go-psi.vercel.app/api' // In production, use the correct Vercel URL
-  : 'https://jet-set-go-psi.vercel.app/api'; // In development, use the same URL
+// Always use current domain for API calls
+const API_URL = window.location.origin + '/api';
+
+console.log('Using API URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -19,9 +19,19 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('API Request to:', config.url);
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add a response interceptor for error handling
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', error.response?.status, error.response?.data);
+    return Promise.reject(error);
+  }
 );
 
 // Auth API endpoints

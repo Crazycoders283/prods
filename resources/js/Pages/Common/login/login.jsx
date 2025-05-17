@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './login.css';
 import { authAPI } from '../../../api'; // Import the authAPI for making API calls
+import { 
+  loadGoogleScript, 
+  initializeGoogleSignIn, 
+  renderGoogleButton, 
+  promptGoogleSignIn, 
+  cleanupGoogleAuth,
+  verifyGoogleToken
+} from '../../../utils/googleAuth';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -17,61 +25,113 @@ export default function Login() {
 
     // Initialize Google API client
     useEffect(() => {
-        // Load the Google API client script
-        const script = document.createElement('script');
-        script.src = "https://accounts.google.com/gsi/client";
-        script.async = true;
-        script.defer = true;
-        script.onload = initializeGoogleSignIn;
-        document.body.appendChild(script);
+        // Load the Google API script and initialize
+        const initializeGoogle = async () => {
+            try {
+                console.log('Starting Google auth initialization');
+                await loadGoogleScript();
+                initializeGoogleSignIn(handleGoogleResponse);
+                renderGoogleButton("google-signin-button");
+                console.log('Google auth initialization complete');
+            } catch (error) {
+                console.error('Failed to initialize Google Sign-In:', error);
+                setErrors(prev => ({ 
+                    ...prev, 
+                    login: 'Google Sign-In initialization failed. Please try again later.' 
+                }));
+            }
+        };
+        
+        initializeGoogle();
 
+        // Clean up on unmount
         return () => {
-            document.body.removeChild(script);
+            cleanupGoogleAuth();
         };
     }, []);
-
-    // Initialize Google Sign-In
-    const initializeGoogleSignIn = () => {
-        window.google.accounts.id.initialize({
-            client_id: "463609792474-nr70b2jrphprah8d4ene5aubrofv484j.apps.googleusercontent.com",
-            callback: handleGoogleResponse,
-            scope: "email profile https://www.googleapis.com/auth/gmail.readonly",
-            ux_mode: "popup",
-            context: "signin"
-        });
-        
-        // Also render the standard Google button as a backup
-        window.google.accounts.id.renderButton(
-            document.getElementById("google-signin-button"), 
-            { theme: "outline", size: "large" }
-        );
-    };
 
     // Handle Google Sign-In response
     const handleGoogleResponse = async (response) => {
         try {
+            console.log('Google sign-in response received', response);
             setProcessing(true);
+            setErrors({}); // Clear any previous errors
+            
+            if (!response || !response.credential) {
+                throw new Error('Invalid Google response: Missing credential');
+            }
+            
+            // Verify token format
+            const isValidToken = await verifyGoogleToken(response.credential);
+            if (!isValidToken) {
+                throw new Error('Invalid token format received from Google');
+            }
+            
+            // Get current URL to ensure we're using the right domain
+            const apiDomain = window.location.origin;
+            console.log('Using API domain:', apiDomain);
+            
             // Send the ID token to your backend
+            console.log('Sending token to backend');
             const authResponse = await authAPI.googleLogin({
                 token: response.credential
             });
             
-            // Store token from your backend
-            localStorage.setItem('token', authResponse.data.token);
-            localStorage.setItem('isAuthenticated', 'true');
+            console.log('Backend authentication successful', authResponse);
             
-            setProcessing(false);
-            navigate('/my-trips');
+            // Store token from your backend
+            if (authResponse && authResponse.data && authResponse.data.token) {
+                localStorage.setItem('token', authResponse.data.token);
+                localStorage.setItem('isAuthenticated', 'true');
+                localStorage.setItem('user', JSON.stringify({
+                    id: authResponse.data.id,
+                    email: authResponse.data.email,
+                    firstName: authResponse.data.firstName,
+                    lastName: authResponse.data.lastName
+                }));
+                
+                setProcessing(false);
+                navigate('/my-trips');
+            } else {
+                throw new Error('Invalid response from server: Missing token');
+            }
         } catch (error) {
+            console.error('Google login error details:', error);
             setProcessing(false);
-            setErrors({ login: 'Google authentication failed. Please try again.' });
-            console.error('Google login error:', error);
+            
+            // Display a more specific error message
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                console.error('Server error response:', error.response.data);
+                let errorMessage = 'Authentication failed';
+                
+                if (error.response.status === 401) {
+                    errorMessage = 'Google authentication failed: Invalid token or server configuration';
+                } else if (error.response.data && error.response.data.message) {
+                    errorMessage = error.response.data.message;
+                }
+                
+                setErrors({ login: errorMessage });
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.error('No response received:', error.request);
+                setErrors({ 
+                    login: 'Server not responding. Please try again later.' 
+                });
+            } else {
+                // Something happened in setting up the request
+                console.error('Request error:', error.message);
+                setErrors({ 
+                    login: `Error: ${error.message}` 
+                });
+            }
         }
     };
 
     // Trigger Google Sign-In
     const handleGoogleSignIn = () => {
-        window.google.accounts.id.prompt();
+        setErrors({}); // Clear previous errors
+        promptGoogleSignIn();
     };
 
     const handleChange = (e) => {
@@ -85,6 +145,7 @@ export default function Login() {
     const submit = async (e) => {
         e.preventDefault();
         setProcessing(true);
+        setErrors({}); // Clear previous errors
         
         try {
             // Make the login API call using the authAPI
@@ -95,6 +156,12 @@ export default function Login() {
             
             // Set authentication status to true in localStorage
             localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('user', JSON.stringify({
+                id: response.data.id,
+                email: response.data.email,
+                firstName: response.data.firstName,
+                lastName: response.data.lastName
+            }));
 
             setProcessing(false);
 
@@ -127,6 +194,11 @@ export default function Login() {
                     {/* Login Form Section */}
                     <div className="login-content">
                         <h2 className="login-title">Login</h2>
+                        {errors.login && (
+                            <div className="error-message mb-4 p-3 bg-red-50 text-red-700 rounded">
+                                {errors.login}
+                            </div>
+                        )}
                         <form className="login-form" onSubmit={submit}>
                             <div className="form-group">
                                 <label htmlFor="email">Email</label>
@@ -177,7 +249,7 @@ export default function Login() {
                             >
                                 {processing ? 'Signing in...' : 'Sign In'}
                             </button>
-                            {errors.login && <div className="error-message">{errors.login}</div>}
+                            
                             <div className="login-divider">or continue with</div>
                             <div className="social-login">
                                 <button type="button" className="social-button" onClick={handleGoogleSignIn}>
