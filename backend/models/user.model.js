@@ -2,9 +2,9 @@ import bcrypt from 'bcryptjs';
 import supabase from '../config/supabase.js';
 
 class User {
-  static async create({ firstName, lastName, email, password }) {
+  static async create({ firstName, lastName, email, password, googleId = null, isGoogleAccount = false }) {
     try {
-      console.log('Creating user with data:', { firstName, lastName, email });
+      console.log('Creating user with data:', { firstName, lastName, email, hasGoogleId: !!googleId });
       
       // Check if user already exists using a simple query
       const { data: users, error: queryError } = await supabase
@@ -33,7 +33,9 @@ class User {
         .insert([{
           email: email,
           password: hashedPassword,
-          name: fullName // Adding the required name field
+          name: fullName, // Adding the required name field
+          google_id: googleId,
+          is_google_account: isGoogleAccount
         }])
         .select();
 
@@ -47,7 +49,12 @@ class User {
       }
 
       const createdUser = data[0];
-      console.log('User created successfully:', { id: createdUser.id, email: createdUser.email, name: createdUser.name });
+      console.log('User created successfully:', { 
+        id: createdUser.id, 
+        email: createdUser.email, 
+        name: createdUser.name,
+        isGoogle: createdUser.is_google_account 
+      });
       
       // Now try to update with the remaining fields separately
       console.log('Attempting to update user with remaining fields');
@@ -70,6 +77,8 @@ class User {
         lastName: lastName,
         name: createdUser.name,
         email: createdUser.email,
+        googleId: createdUser.google_id,
+        isGoogleAccount: createdUser.is_google_account,
         role: 'user' // Default role
       };
     } catch (error) {

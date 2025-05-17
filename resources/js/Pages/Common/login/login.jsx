@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './login.css';
 import { authAPI } from '../../../api'; // Import the authAPI for making API calls
@@ -14,6 +14,65 @@ export default function Login() {
 
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
+
+    // Initialize Google API client
+    useEffect(() => {
+        // Load the Google API client script
+        const script = document.createElement('script');
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeGoogleSignIn;
+        document.body.appendChild(script);
+
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, []);
+
+    // Initialize Google Sign-In
+    const initializeGoogleSignIn = () => {
+        window.google.accounts.id.initialize({
+            client_id: "463609792474-nr70b2jrphprah8d4ene5aubrofv484j.apps.googleusercontent.com",
+            callback: handleGoogleResponse,
+            scope: "email profile https://www.googleapis.com/auth/gmail.readonly",
+            ux_mode: "popup",
+            context: "signin"
+        });
+        
+        // Also render the standard Google button as a backup
+        window.google.accounts.id.renderButton(
+            document.getElementById("google-signin-button"), 
+            { theme: "outline", size: "large" }
+        );
+    };
+
+    // Handle Google Sign-In response
+    const handleGoogleResponse = async (response) => {
+        try {
+            setProcessing(true);
+            // Send the ID token to your backend
+            const authResponse = await authAPI.googleLogin({
+                token: response.credential
+            });
+            
+            // Store token from your backend
+            localStorage.setItem('token', authResponse.data.token);
+            localStorage.setItem('isAuthenticated', 'true');
+            
+            setProcessing(false);
+            navigate('/my-trips');
+        } catch (error) {
+            setProcessing(false);
+            setErrors({ login: 'Google authentication failed. Please try again.' });
+            console.error('Google login error:', error);
+        }
+    };
+
+    // Trigger Google Sign-In
+    const handleGoogleSignIn = () => {
+        window.google.accounts.id.prompt();
+    };
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -121,7 +180,7 @@ export default function Login() {
                             {errors.login && <div className="error-message">{errors.login}</div>}
                             <div className="login-divider">or continue with</div>
                             <div className="social-login">
-                                <button type="button" className="social-button">
+                                <button type="button" className="social-button" onClick={handleGoogleSignIn}>
                                     <img
                                         src="/images/login/google-logo.svg"
                                         alt="Google"
@@ -146,6 +205,9 @@ export default function Login() {
                                     />
                                 </button>
                             </div>
+                            
+                            {/* Standard Google Sign-In button as backup */}
+                            <div id="google-signin-button" className="mt-4"></div>
                             <div className="signup-link">
                                 Don't have an account? <Link to="/signup" className="text-link">Sign Up</Link>
                             </div>

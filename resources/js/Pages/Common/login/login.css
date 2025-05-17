@@ -187,6 +187,18 @@
   height: 20px;
 }
 
+/* Google Sign-in Button Container */
+#google-signin-button {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+/* Add margin top utility class */
+.mt-4 {
+  margin-top: 1rem;
+}
+
 /* By Proceeding Sentence Styling */
 .login-footer {
   margin-top: 1.5rem;

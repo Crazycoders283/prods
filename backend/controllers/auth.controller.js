@@ -12,6 +12,81 @@ const generateToken = (id) => {
   });
 };
 
+// @desc    Google Login/Register
+// @route   POST /api/auth/google-login
+// @access  Public
+export const googleLogin = async (req, res) => {
+  try {
+    console.log('Google login request received');
+    
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ message: 'Google token is required' });
+    }
+    
+    try {
+      // Verify the token with Google
+      const googleResponse = await axios.get(
+        `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${token}`
+      );
+      
+      const { email, given_name, family_name, sub: googleId } = googleResponse.data;
+      
+      // Check if user exists
+      let user = await User.findByEmail(email);
+      
+      if (!user) {
+        // Create a new user if doesn't exist
+        user = await User.create({
+          firstName: given_name,
+          lastName: family_name,
+          email,
+          googleId,
+          password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
+          isGoogleAccount: true
+        });
+        console.log('New Google user created:', { id: user.id, email });
+      } else {
+        // Update Google ID if not set
+        if (!user.googleId) {
+          await User.update(user.id, { googleId, isGoogleAccount: true });
+          console.log('Updated existing user with Google ID:', { id: user.id });
+        }
+      }
+      
+      // Generate JWT
+      const jwtToken = jwt.sign(
+        { id: user.id },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRE }
+      );
+      
+      console.log('Google user authenticated successfully:', { id: user.id, email });
+      
+      // Return user data and token
+      res.json({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        token: jwtToken,
+        isGoogleAccount: true
+      });
+      
+    } catch (error) {
+      console.error('Google token verification error:', error.response?.data || error.message);
+      return res.status(401).json({ message: 'Invalid Google token' });
+    }
+  } catch (error) {
+    console.error('Error in Google login controller:', error);
+    res.status(500).json({ 
+      message: 'Server error during Google authentication', 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
+  }
+};
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
