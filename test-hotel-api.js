@@ -1,220 +1,136 @@
-import fetch from 'node-fetch';
-import dotenv from 'dotenv';
+import axios from 'axios';
 
-// Load environment variables
-dotenv.config();
+// Format date as YYYY-MM-DD
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
-console.log('🔍 Testing Hotels API...');
+// Get dates for testing
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
 
-// Test the production endpoint directly
-async function testProductionHotelAPI() {
-  const searchEndpoint = 'https://jet-set-go-psi.vercel.app/api/hotels/search';
-  const searchData = {
-    destination: 'PAR',
-    checkInDate: '2025-05-29',
-    checkOutDate: '2025-06-05',
-    travelers: 2
-  };
+const dayAfterTomorrow = new Date(tomorrow);
+dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+// Cities to test in order of priority
+const testCities = [
+  { code: 'BOM', name: 'Mumbai, India' },
+  { code: 'DEL', name: 'Delhi, India' },
+  { code: 'JFK', name: 'New York (JFK), USA' },
+  { code: 'LHR', name: 'London Heathrow, UK' }
+];
+
+// Define test parameters with dynamically generated dates
+const baseParams = {
+  checkInDate: formatDate(tomorrow),
+  checkOutDate: formatDate(dayAfterTomorrow),
+  travelers: 2
+};
+
+// API URL
+const API_URL = 'https://jet-set-go-psi.vercel.app/api/hotels/search';
+
+// Test function
+const testHotelAPI = async (cityCode, cityName) => {
+  const params = { ...baseParams, destination: cityCode };
   
-  console.log(`\n🔄 Testing search endpoint: ${searchEndpoint}`);
+  console.log(`\n----- Testing ${cityName} (${cityCode}) -----`);
+  console.log('Request parameters:', params);
   
   try {
-    // Test with GET method and query parameters
-    const queryParams = new URLSearchParams();
-    Object.entries(searchData).forEach(([key, value]) => {
-      queryParams.append(key, value);
-    });
+    const response = await axios.get(API_URL, { params });
     
-    const url = `${searchEndpoint}?${queryParams.toString()}`;
-    console.log(`🔗 URL: ${url}`);
+    console.log('Response status:', response.status);
+    console.log('Success:', response.data.success);
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
+    // Check for raw response structure for debugging
+    const responseData = response.data;
+    console.log('Response data structure:', Object.keys(responseData));
     
-    const status = response.status;
-    console.log(`📊 Status code: ${status}`);
-    
-    // Try to parse the response
-    const data = await response.json();
-    console.log('✅ API request successful');
-    
-    if (data.data && data.data.data && Array.isArray(data.data.data)) {
-      console.log(`🏨 Found ${data.data.data.length} hotels`);
+    if (responseData.data) {
+      console.log('Data structure:', Object.keys(responseData.data));
       
-      // Get the first hotel ID for details testing
-      let hotelId = null;
-      if (data.data.data.length > 0) {
-        console.log('\n🏨 Sample hotel data:');
-        console.log(JSON.stringify(data.data.data[0], null, 2).substring(0, 300) + '...');
-        
-        hotelId = data.data.data[0].hotelId;
-        if (hotelId) {
-          // Now test the hotel details/offers endpoint
-          await testHotelDetails(hotelId);
-        }
-      }
-    }
-  } catch (error) {
-    console.error(`❌ Error testing search endpoint: ${error.message}`);
-  }
-}
-
-// Test hotel details for a specific hotel ID
-async function testHotelDetails(hotelId) {
-  if (!hotelId) {
-    console.log('⚠️ No hotel ID available for testing details');
-    return;
-  }
-  
-  console.log(`\n🔍 Testing Hotel Details API for hotel ID: ${hotelId}`);
-  
-  // Use the updated details endpoint path
-  const detailsEndpoint = `https://jet-set-go-psi.vercel.app/api/hotels/details/${hotelId}`;
-  
-  const params = {
-    checkInDate: '2025-05-29',
-    checkOutDate: '2025-06-05',
-    adults: 2,
-    children: 0
-  };
-  
-  try {
-    // Convert params to query parameters
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      queryParams.append(key, value);
-    });
-    
-    const url = `${detailsEndpoint}?${queryParams.toString()}`;
-    console.log(`🔗 URL: ${url}`);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
-    
-    const status = response.status;
-    console.log(`📊 Status code: ${status}`);
-    
-    if (status === 200) {
-      try {
-        // Clone the response before trying to parse as JSON
-        const responseData = await response.json();
-        console.log('✅ Hotel details API request successful');
-        
-        if (responseData.data) {
-          console.log('\n📋 Hotel details data:');
-          console.log(JSON.stringify(responseData.data, null, 2).substring(0, 300) + '...');
-        } else {
-          console.log('⚠️ Response format is unexpected. Missing data property.');
-        }
-      } catch (parseError) {
-        console.log(`❌ Error parsing response: ${parseError.message}`);
-        // If JSON parsing failed, try to get the raw text
-        const rawText = await response.text().catch(e => 'Could not get raw text');
-        console.log(`Response starts with: ${rawText.substring(0, 200)}...`);
+      const hotels = responseData.data.data || [];
+      console.log(`\nFound ${hotels.length || 0} hotels`);
+      
+      if (hotels && hotels.length > 0) {
+        console.log('\nFirst 3 hotels:');
+        hotels.slice(0, 3).forEach((hotel, index) => {
+          console.log(`\n--- Hotel ${index + 1} ---`);
+          console.log('Hotel data keys:', Object.keys(hotel));
+          console.log('Name:', hotel.name || hotel.hotel?.name || 'N/A');
+          console.log('ID:', hotel.hotelId || hotel.id || 'N/A');
+          console.log('Rating:', hotel.rating || 'N/A');
+          
+          // Try to extract price from different possible locations
+          let price = 'N/A';
+          if (hotel.price) {
+            price = typeof hotel.price === 'object' ? hotel.price.total : hotel.price;
+          } else if (hotel.offers && hotel.offers.length > 0) {
+            price = hotel.offers[0].price?.total || hotel.offers[0].price;
+          }
+          console.log('Price:', price);
+          
+          // Try to extract location from different possible fields
+          let location = 'N/A';
+          if (hotel.address) {
+            location = hotel.address.cityName || hotel.address.countryCode;
+          } else if (hotel.location) {
+            location = hotel.location;
+          } else if (hotel.city) {
+            location = hotel.city;
+          }
+          console.log('Location:', location);
+        });
+        return { success: true, hasData: true };
+      } else {
+        console.log('No hotel data available in the response');
+        return { success: true, hasData: false };
       }
     } else {
-      let errorText = '';
-      try {
-        const errorData = await response.text();
-        errorText = errorData;
-      } catch (e) {
-        errorText = 'Could not read error response';
-      }
-      console.log(`❌ Hotel details API request failed with status ${status}`);
-      console.log(`Error details: ${errorText.substring(0, 200)}...`);
+      console.log('No data field in the response or it is empty');
+      return { success: true, hasData: false };
     }
-    
-    // Also test the offers endpoint
-    await testHotelOffers(hotelId);
-    
   } catch (error) {
-    console.error(`❌ Error testing hotel details endpoint: ${error.message}`);
-  }
-}
-
-// Test hotel offers endpoint
-async function testHotelOffers(hotelId) {
-  console.log(`\n🔍 Testing Hotel Offers API for hotel ID: ${hotelId}`);
-  
-  // Use the offers endpoint
-  const offersEndpoint = `https://jet-set-go-psi.vercel.app/api/hotels/offers/${hotelId}`;
-  
-  const params = {
-    checkInDate: '2025-05-29',
-    checkOutDate: '2025-06-05',
-    adults: 2,
-    children: 0
-  };
-  
-  try {
-    // Convert params to query parameters
-    const queryParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
-      queryParams.append(key, value);
-    });
-    
-    const url = `${offersEndpoint}?${queryParams.toString()}`;
-    console.log(`🔗 URL: ${url}`);
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      }
-    });
-    
-    const status = response.status;
-    console.log(`📊 Status code: ${status}`);
-    
-    if (status === 200) {
-      try {
-        const data = await response.json();
-        console.log('✅ Hotel offers API request successful');
-        
-        if (data.data && data.data.offers && data.data.offers.length > 0) {
-          console.log(`💰 Found ${data.data.offers.length} offers for this hotel`);
-          console.log('\nSample offer data:');
-          console.log(JSON.stringify(data.data.offers[0], null, 2).substring(0, 300) + '...');
-        } else {
-          console.log('⚠️ No offers found for this hotel');
-        }
-      } catch (parseError) {
-        console.log(`❌ Error parsing response: ${parseError.message}`);
-        // Try to get raw text
-        const rawText = await response.text().catch(e => 'Could not get raw text');
-        
-        if (rawText.includes('<!DOCTYPE html>')) {
-          console.log('⚠️ Response is HTML instead of JSON (server returning the main app instead of API data)');
-          console.log('This indicates the API endpoint might not be properly implemented on the server');
-        } else {
-          console.log(`Response starts with: ${rawText.substring(0, 200)}...`);
-        }
-      }
+    console.error('Error testing hotel API:');
+    if (error.response) {
+      console.error('Status:', error.response.status);
+      console.error('Data:', error.response.data);
+    } else if (error.request) {
+      console.error('No response received');
     } else {
-      let errorText = '';
-      try {
-        const errorData = await response.text();
-        errorText = errorData;
-      } catch (e) {
-        errorText = 'Could not read error response';
-      }
-      console.log(`❌ Hotel offers API request failed with status ${status}`);
-      console.log(`Error details: ${errorText.substring(0, 200)}...`);
+      console.error('Error message:', error.message);
     }
-  } catch (error) {
-    console.error(`❌ Error testing hotel offers endpoint: ${error.message}`);
+    return { success: false, hasData: false };
   }
-}
+};
 
-// Run the test
-testProductionHotelAPI()
-  .then(() => console.log('\n✅ All hotel API testing completed'))
-  .catch(error => console.error('\n❌ Unhandled error during testing:', error)); 
+// Run tests sequentially
+const runTests = async () => {
+  console.log('Starting hotel API tests...');
+  console.log(`Date Range: ${baseParams.checkInDate} to ${baseParams.checkOutDate} (1-night stay)`);
+  
+  const results = [];
+  
+  for (const city of testCities) {
+    const result = await testHotelAPI(city.code, city.name);
+    results.push({
+      city: city.name,
+      code: city.code,
+      ...result
+    });
+  }
+  
+  console.log('\n----- Summary of Results -----');
+  results.forEach(result => {
+    console.log(`${result.city} (${result.code}): API Success: ${result.success}, Has Hotel Data: ${result.hasData}`);
+  });
+  
+  console.log('\nTests completed.');
+};
+
+// Execute tests
+runTests(); 
