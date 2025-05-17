@@ -10,107 +10,187 @@ const Footer = () => {
   
   return (
     <footer className="footer">
-      <div className="footer-content">
-        <div className="footer-section">
-          <div className="footer-logo">
-            <Link to="/">
-              <img src="https://source.unsplash.com/rTZW4f02zY8/800x600" alt="JET SETTERS" className="logo-image" />
+      <div className="container">
+        <div className="footer-grid">
+          <div className="footer-column">
+            <Link to="/" className="footer-logo-link">
+              <div className="footer-logo">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className="logo-icon"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M2 12h20"></path>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+                <h3 className="column-title">JET SETTERS</h3>
+              </div>
+            </Link>
+            <p className="column-description">
+              Extraordinary travel experiences for travelers that demand excellence, customization, and unforgettable memories.
+            </p>
+          </div>
+          <div className="footer-column">
+            <h3 className="column-title-sm">Travel</h3>
+            <nav aria-label="Travel Navigation">
+              <ul className="nav-list">
+                <li>
+                  <Link to="/cruises" className="nav-link">
+                    Cruise
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/flights" className="nav-link">
+                    Flight
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/packages" className="nav-link">
+                    Packages
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/rental" className="nav-link">
+                    Hotels
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          <div className="footer-column">
+            <h3 className="column-title-sm">Resources</h3>
+            <nav aria-label="Resources Navigation">
+              <ul className="nav-list">
+                <li>
+                  <Link to="/destinations" className="nav-link">
+                    Destinations
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/blog" className="nav-link">
+                    Travel Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/support" className="nav-link">
+                    Support
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/faq" className="nav-link">
+                    FAQs
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          <div className="footer-column">
+            <h3 className="column-title-sm">Company</h3>
+            <nav aria-label="Company Navigation">
+              <ul className="nav-list">
+                <li>
+                  <Link to="/about" className="nav-link">
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/careers" className="nav-link">
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/contact" className="nav-link">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/privacy" className="nav-link">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/terms" className="nav-link">
+                    Terms & Conditions
+                  </Link>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <p className="copyright">© {currentYear} JET SETTERS. All rights reserved.</p>
+          <div className="social-links">
+            <Link
+              to="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link"
+              aria-label="LinkedIn"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="social-icon"
+              >
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                <rect width="4" height="12" x="2" y="9"></rect>
+                <circle cx="4" cy="4" r="2"></circle>
+              </svg>
+            </Link>
+            <Link
+              to="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link"
+              aria-label="X"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="social-icon"
+              >
+                <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+              </svg>
+            </Link>
+            <Link 
+              to="https://instagram.com" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-link" 
+              aria-label="Instagram"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="social-icon"
+              >
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
             </Link>
           </div>
-          <div className="footer-about">
-            <p>Discover extraordinary cruise experiences with us. We've helped thousands of travelers create unforgettable memories on the seas.</p>
-          </div>
-          <div className="connect-us">
-            <h3>Connect with us</h3>
-            <div className="social-links">
-              <a href="https://facebook.com/jetsetters" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="social-link">
-                <i className="fab fa-facebook-f"></i>
-              </a>
-              <a href="https://twitter.com/jetsetters" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="social-link">
-                <i className="fab fa-twitter"></i>
-              </a>
-              <a href="https://instagram.com/jetsetters" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="social-link">
-                <i className="fab fa-instagram"></i>
-              </a>
-              <a href="https://linkedin.com/company/jetsetters" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="social-link">
-                <i className="fab fa-linkedin-in"></i>
-              </a>
-              <a href="https://youtube.com/jetsetters" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="social-link">
-                <i className="fab fa-youtube"></i>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-links">
-          <div className="footer-column">
-            <h3>Services</h3>
-            <ul>
-              <li><Link to="/cruise-booking">Cruise Booking</Link></li>
-              <li><Link to="/terms">Terms & Conditions</Link></li>
-              <li><Link to="/covid-updates">COVID-19 Updates</Link></li>
-              <li><Link to="/flights">Flights</Link></li>
-              <li><Link to="/special-offers">Special Offers</Link></li>
-            </ul>
-          </div>
-
-          <div className="footer-column">
-            <h3>Company</h3>
-            <ul>
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/blog">Travel Blog</Link></li>
-              <li><Link to="/reviews">Reviews</Link></li>
-              <li><Link to="/contact">Contact Us</Link></li>
-              <li><Link to="/careers">Careers</Link></li>
-            </ul>
-          </div>
-
-          <div className="footer-column">
-            <h3>Popular Destinations</h3>
-            <ul>
-              <li><Link to="/destinations/caribbean">Caribbean</Link></li>
-              <li><Link to="/destinations/mediterranean">Mediterranean</Link></li>
-              <li><Link to="/destinations/alaska">Alaska</Link></li>
-              <li><Link to="/destinations/hawaii">Hawaii</Link></li>
-              <li><Link to="/destinations/bahamas">Bahamas</Link></li>
-            </ul>
-          </div>
-
-          <div className="footer-column">
-            <h3>Contact Us</h3>
-            <ul className="contact-list">
-              <li>
-                <i className="fas fa-envelope contact-icon"></i>
-                <a href="mailto:bookings@jet-setters.us">bookings@jet-setters.us</a>
-              </li>
-              <li>
-                <i className="fas fa-phone contact-icon"></i>
-                <a href="tel:+18885813028">(+1) 888-581-3028</a>
-              </li>
-              <li>
-                <i className="fas fa-map-marker-alt contact-icon"></i>
-                <a href="https://maps.google.com/?q=513+W+Bonaventure+Ave+Tracy,+CA+95391" target="_blank" rel="noopener noreferrer">
-                  513 W Bonaventure Ave Tracy, CA 95391
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      
-      <div className="footer-bottom">
-        <div className="copyright">
-          &copy; {currentYear} JET SETTERS. All rights reserved.
-          <span className="legal-links">
-            <Link to="/privacy">Privacy Policy</Link> | 
-            <Link to="/terms">Terms of Service</Link> | 
-            <Link to="/cookies">Cookie Policy</Link>
-          </span>
-        </div>
-        <div className="footer-badges">
-          <Link to="/secure-booking" className="badge"><i className="fas fa-lock"></i> Secure Booking</Link>
-          <Link to="/support" className="badge"><i className="fas fa-headset"></i> 24/7 Support</Link>
-          <Link to="/privacy" className="badge"><i className="fas fa-shield-alt"></i> Privacy Protected</Link>
         </div>
       </div>
     </footer>
