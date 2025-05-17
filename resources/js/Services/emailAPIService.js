@@ -1,7 +1,56 @@
 /**
  * Service for handling email API calls
  */
+import axios from 'axios';
+import apiConfig from '../../../src/config/api.js';
+
 const emailAPIService = {
+  /**
+   * Sends an email via the API
+   * @param {Object} emailData - Email data object
+   * @returns {Promise<Object>} - Response from the API
+   */
+  sendEmail: async (emailData) => {
+    try {
+      const baseUrl = apiConfig.baseUrl;
+      const apiUrl = `${baseUrl}/email/send`;
+      
+      const response = await axios.post(apiUrl, emailData);
+      return response.data;
+    } catch (error) {
+      console.error('Error sending email:', error);
+      // We don't want to block the main flow if email fails
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
+   * Tests API connection
+   * @returns {Promise<Object>} - Result of API test
+   */
+  testConnection: async () => {
+    try {
+      // This is a simple endpoint that should work if the API is accessible
+      try {
+        const baseUrl = apiConfig.baseUrl;
+        // Ensure URL is properly constructed with slash
+        const testUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}test`;
+        
+        const response = await axios.get(testUrl, {
+          timeout: 5000 // 5 seconds timeout
+        });
+        
+        return { success: true, data: response.data };
+      } catch (connectionError) {
+        console.warn('API connection test failed:', connectionError);
+        return { success: false, error: connectionError.message };
+      }
+    } catch (error) {
+      console.error('Unexpected error in testConnection:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   /**
    * Send a callback confirmation email
    * @param {Object} data - The callback data
@@ -15,7 +64,12 @@ const emailAPIService = {
       // First, try a direct API call to the test endpoint to verify connectivity
       // This is a simple endpoint that should work if the API is accessible
       try {
-        await fetch(import.meta.env.VITE_APP_URL+'test', { method: 'GET' })
+        const baseUrl = apiConfig.baseUrl;
+        // Ensure URL is properly constructed with slash
+        const testUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}test`;
+        
+        console.log('Testing API connectivity at:', testUrl);
+        await fetch(testUrl, { method: 'GET' })
           .then(res => console.log('API connectivity test:', res.ok ? 'Success' : 'Failed'));
       } catch (e) {
         console.log('API connectivity test failed:', e.message);

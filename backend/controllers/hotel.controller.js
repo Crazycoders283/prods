@@ -92,44 +92,48 @@ export const getDestinations = async (req, res) => {
 
 export const searchHotels = async (req, res) => {
   try {
-    const params = req.method === 'POST' ? req.body : req.query;
-    const { destination, dates, travelers, cityCode, checkInDate, checkOutDate, adults } = params;
-
-    const searchParams = {
-      cityCode: cityCode || destination,
+    const { destination, checkInDate, checkOutDate, travelers } = req.query;
+    
+    console.log('HotelController: Search request received with params:', {
+      destination,
       checkInDate,
       checkOutDate,
-      adults: parseInt(adults || travelers) || 2
-    };
-    
-    // Handle date ranges if provided
-    if (dates && dates !== 'Select dates') {
-      const [start, end] = dates.split(' - ');
-      if (start && end) {
-        searchParams.checkInDate = start;
-        searchParams.checkOutDate = end;
-      }
-    }
+      travelers
+    });
 
-    // Validate required parameters
-    if (!searchParams.cityCode) {
+    if (!destination) {
       return res.status(400).json({
         success: false,
-        message: 'City code or destination is required'
+        message: 'Destination is required'
+      });
+    }
+    
+    if (!checkInDate || !checkOutDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Check-in and check-out dates are required'
       });
     }
 
-    const results = await hotelService.searchHotels(searchParams);
+    // Convert travelers to a number (default to 2)
+    const adults = parseInt(travelers || '2', 10);
     
-    res.json({
+    const results = await hotelService.searchHotels(
+      destination, 
+      checkInDate, 
+      checkOutDate, 
+      adults
+    );
+    
+    return res.status(200).json({
       success: true,
       data: results
     });
   } catch (error) {
-    console.error('Error in searchHotels:', error);
-    res.status(error.response?.status || 500).json({
+    console.error('HotelController: Error in searchHotels:', error.message);
+    return res.status(500).json({
       success: false,
-      message: error.message || 'Error searching hotels'
+      message: error.message
     });
   }
 };
@@ -145,15 +149,26 @@ export const getHotelDetails = async (req, res) => {
       });
     }
 
-    const hotelDetails = await hotelService.getHotelDetails(hotelId);
-    
-    res.json({
-      success: true,
-      data: hotelDetails
-    });
+    console.log('HotelController: Getting details for hotel ID:', hotelId);
+
+    // Add a try-catch specifically for the service call
+    try {
+      const hotelDetails = await hotelService.getHotelDetails(hotelId);
+      
+      return res.json({
+        success: true,
+        data: hotelDetails
+      });
+    } catch (serviceError) {
+      console.error('Error from hotel service:', serviceError);
+      return res.status(404).json({
+        success: false,
+        message: serviceError.message || 'Hotel details not found'
+      });
+    }
   } catch (error) {
-    console.error('Error in getHotelDetails:', error);
-    res.status(500).json({
+    console.error('Error in getHotelDetails controller:', error);
+    return res.status(500).json({
       success: false,
       message: 'Error getting hotel details',
       error: error.message

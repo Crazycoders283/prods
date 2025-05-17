@@ -48,7 +48,12 @@ export default function HotelSearchResults() {
   useEffect(() => {
     const fetchDestinations = async () => {
       try {
-        const response = await axios.get(import.meta.env.VITE_APP_URL+'hotels/destinations', {
+        // Use API config for consistent URL construction
+        const destinationsUrl = apiConfig.endpoints.hotels.search.replace('search', 'destinations');
+        
+        console.log('Fetching destinations from:', destinationsUrl);
+        
+        const response = await axios.get(destinationsUrl, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -63,6 +68,24 @@ export default function HotelSearchResults() {
     };
     fetchDestinations();
   }, []);
+
+  // Update formatDate function to ensure YYYY-MM-DD format for API requests
+  const formatDate = (date) => {
+    if (!date) return '';
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) {
+        throw new Error('Invalid date');
+      }
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`; // Returns YYYY-MM-DD format
+    } catch (e) {
+      console.error('Date formatting error:', e);
+      throw new Error('Invalid date format');
+    }
+  };
 
   // Handle search submission
   const handleSearch = async () => {
@@ -86,11 +109,26 @@ export default function HotelSearchResults() {
     setSearchError(null);
 
     try {
-      const response = await axios.get(apiConfig.endpoints.hotels.search, {
+      // Format dates properly for API - ensure YYYY-MM-DD format
+      const formattedStartDate = formatDate(selectedStartDate);
+      const formattedEndDate = formatDate(selectedEndDate);
+
+      // Use apiConfig for consistent URL construction
+      const apiUrl = apiConfig.endpoints.hotels.search;
+
+      console.log('API URL:', apiUrl);
+      console.log('Search Parameters:', {
+        destination: cityCode,
+        checkInDate: formattedStartDate,
+        checkOutDate: formattedEndDate,
+        travelers: searchTravelers
+      });
+
+      const response = await axios.get(apiUrl, {
         params: {
           destination: cityCode,
-          checkInDate: selectedStartDate.toISOString().split('T')[0],
-          checkOutDate: selectedEndDate.toISOString().split('T')[0],
+          checkInDate: formattedStartDate,
+          checkOutDate: formattedEndDate,
           travelers: searchTravelers
         }
       });
@@ -111,8 +149,8 @@ export default function HotelSearchResults() {
         setFilteredHotels(formattedResults);
         setSearchParams({
           cityCode,
-          checkInDate: selectedStartDate.toISOString().split('T')[0],
-          checkOutDate: selectedEndDate.toISOString().split('T')[0],
+          checkInDate: formattedStartDate,
+          checkOutDate: formattedEndDate,
           adults: searchTravelers
         });
       } else {
@@ -154,22 +192,14 @@ export default function HotelSearchResults() {
       return;
     }
 
-    const formattedStartDate = startDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    const formattedStartDate = formatDisplayDate(startDate);
 
     if (!endDate) {
       setSearchDates(`${formattedStartDate} - Select checkout`);
       return;
     }
 
-    const formattedEndDate = endDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+    const formattedEndDate = formatDisplayDate(endDate);
 
     setSearchDates(`${formattedStartDate} - ${formattedEndDate}`);
   };
@@ -181,11 +211,26 @@ export default function HotelSearchResults() {
         setIsLoading(true);
         setError(null);
         try {
-          const response = await axios.get(apiConfig.endpoints.hotels.search, {
+          // Format dates properly for API - ensure YYYY-MM-DD format
+          const formattedCheckInDate = formatDate(searchParams.checkInDate);
+          const formattedCheckOutDate = formatDate(searchParams.checkOutDate);
+
+          // Use environment variable for API URL with proper slash handling
+          const baseUrl = apiConfig.baseUrl || '';
+          const apiUrl = `${baseUrl}/hotels/search`;
+          
+          console.log('Fetching search results with params:', {
+            destination: searchParams.cityCode,
+            checkInDate: formattedCheckInDate,
+            checkOutDate: formattedCheckOutDate,
+            travelers: searchParams.adults
+          });
+
+          const response = await axios.get(apiUrl, {
             params: {
               destination: searchParams.cityCode,
-              checkInDate: searchParams.checkInDate,
-              checkOutDate: searchParams.checkOutDate,
+              checkInDate: formattedCheckInDate,
+              checkOutDate: formattedCheckOutDate,
               travelers: searchParams.adults
             }
           });
@@ -198,12 +243,18 @@ export default function HotelSearchResults() {
             const formattedResults = hotelsData.map(hotel => {
               // Extract price from the API response
               let hotelPrice = '0';
+              let hotelName = 'Hotel Not Available';
               
               // Try to get price from different possible locations in the response
               if (hotel.offers && hotel.offers.length > 0) {
                 const offer = hotel.offers[0];
                 if (offer.price) {
                   hotelPrice = offer.price.total || offer.price.base || offer.price;
+                }
+                
+                // Try to get hotel name from offer details
+                if (offer.hotel && offer.hotel.name) {
+                  hotelName = offer.hotel.name;
                 }
               } else if (hotel.price) {
                 hotelPrice = typeof hotel.price === 'object' ? hotel.price.total || hotel.price.base : hotel.price;
@@ -217,21 +268,28 @@ export default function HotelSearchResults() {
                 hotelPrice = (Math.random() * 400 + 100).toFixed(2);
               }
 
+              // Check more potential locations for hotel name
+              if (!hotelName || hotelName === 'Hotel Not Available') {
+                if (hotel.name) {
+                  hotelName = hotel.name;
+                } else if (hotel.hotel && hotel.hotel.name) {
+                  hotelName = hotel.hotel.name;
+                } else if (hotel.property && hotel.property.name) {
+                  hotelName = hotel.property.name;
+                }
+              }
+
+              // Try to extract city name from address if available
+              const cityName = hotel.address?.cityName || hotel.city || searchDestination;
+
               // Ensure price is a valid number and format it
               const numericPrice = parseFloat(hotelPrice);
               hotelPrice = isNaN(numericPrice) ? '0' : numericPrice.toFixed(2);
 
-              console.log('Processing hotel:', {
-                name: hotel.name,
-                hotelId: hotel.hotelId,
-                chainCode: hotel.chainCode,
-                finalPrice: hotelPrice
-              });
-
               return {
-                id: hotel.hotelId || Math.random().toString(36).substr(2, 9),
-                name: hotel.name || 'Hotel Name Not Available',
-                location: hotel.address?.cityName || `${hotel.address?.countryCode || 'US'}`,
+                id: hotel.hotelId || hotel.id || Math.random().toString(36).substr(2, 9),
+                name: hotelName,
+                location: cityName || searchParams.cityCode,
                 price: hotelPrice,
                 rating: hotel.rating || ((Math.random() * 2 + 3).toFixed(1)), // Random rating between 3.0 and 5.0
                 image: hotel.media?.images?.[0]?.uri || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
@@ -245,17 +303,16 @@ export default function HotelSearchResults() {
           } else {
             setError(response.data.message || "No hotels found");
           }
-        } catch (error) {
-          console.error('Error fetching hotels:', error);
-          setError(error.response?.data?.message || "Error fetching hotels");
-        } finally {
+        } catch (dateError) {
+          console.error('Date formatting error:', dateError);
+          setError('Invalid date format. Please try searching again.');
           setIsLoading(false);
         }
       } else {
         setFilteredHotels(searchResults);
       }
     };
-
+    
     fetchSearchResults();
   }, [searchParams, searchResults]);
 
@@ -329,7 +386,8 @@ export default function HotelSearchResults() {
     }));
   };
 
-  const formatDate = (dateString) => {
+  // Update the display format for dates shown to users (not API format)
+  const formatDisplayDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -341,6 +399,7 @@ export default function HotelSearchResults() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <p className="ml-3 text-lg text-blue-500">Loading hotels...</p>
       </div>
     );
   }
@@ -641,7 +700,12 @@ export default function HotelSearchResults() {
                     onClick={() => navigate(`/hotel-details`, { 
                       state: { 
                         hotelData: hotel,
-                        searchParams: searchParams
+                        searchParams: {
+                          ...searchParams,
+                          // Ensure dates are in YYYY-MM-DD format for consistency
+                          checkInDate: formatDate(searchParams.checkInDate),
+                          checkOutDate: formatDate(searchParams.checkOutDate)
+                        }
                       } 
                     })}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

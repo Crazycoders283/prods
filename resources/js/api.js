@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Determine API URL based on environment
 const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://www.jetsetterss.com/api' // In production, use relative URL that will be handled by Express
-  : 'https://www.jetsetterss.com/api'; // In development, use full URL
+  ? 'https://jet-set-go-psi.vercel.app/api' // In production, use the correct Vercel URL
+  : 'https://jet-set-go-psi.vercel.app/api'; // In development, use the same URL
 
 const api = axios.create({
   baseURL: API_URL,

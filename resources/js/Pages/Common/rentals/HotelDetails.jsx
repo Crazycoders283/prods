@@ -23,6 +23,7 @@ export default function HotelDetails() {
   const searchParams = location.state?.searchParams || {};
 
   const [selectedHotel, setSelectedHotel] = useState(null);
+  const [currentHotelData, setCurrentHotelData] = useState(hotelData);
   const [activeImage, setActiveImage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
@@ -34,22 +35,33 @@ export default function HotelDetails() {
   });
   const [showReviews, setShowReviews] = useState(false);
   const [checkInDate, setCheckInDate] = useState(() => {
-    // Ensure checkInDate is a string
+    // Ensure checkInDate is a string in YYYY-MM-DD format
     if (searchParams?.checkInDate) {
-      return typeof searchParams.checkInDate === 'string'
-        ? searchParams.checkInDate
-        : searchParams.checkInDate.toString();
+      // If it's already a date object or string, format it properly
+      const date = new Date(searchParams.checkInDate);
+      if (!isNaN(date.getTime())) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      }
+      return searchParams.checkInDate;
     }
-    return "Jul 24, 2025";
+    // Default to today's date if no date is provided
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   });
   const [checkOutDate, setCheckOutDate] = useState(() => {
-    // Ensure checkOutDate is a string
+    // Ensure checkOutDate is a string in YYYY-MM-DD format
     if (searchParams?.checkOutDate) {
-      return typeof searchParams.checkOutDate === 'string'
-        ? searchParams.checkOutDate
-        : searchParams.checkOutDate.toString();
+      // If it's already a date object or string, format it properly
+      const date = new Date(searchParams.checkOutDate);
+      if (!isNaN(date.getTime())) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      }
+      return searchParams.checkOutDate;
     }
-    return "Jul 28, 2025";
+    // Default to tomorrow's date if no date is provided
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGuestDropdown, setShowGuestDropdown] = useState(false);
@@ -86,6 +98,9 @@ export default function HotelDetails() {
       navigate('/rental');
       return;
     }
+    
+    // Initialize currentHotelData when hotelData changes
+    setCurrentHotelData(location.state?.hotelData);
   }, [location.state?.hotelData, navigate]);
 
   useEffect(() => {
@@ -468,7 +483,16 @@ export default function HotelDetails() {
   };
 
   const formatDate = (date) => {
+    if (!date) return '';
+    
+    // Handle both string dates and Date objects
     const d = new Date(date);
+    if (isNaN(d.getTime())) {
+      console.error('Invalid date:', date);
+      return '';
+    }
+    
+    // Format as YYYY-MM-DD for API requests
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
@@ -534,15 +558,16 @@ export default function HotelDetails() {
 
       // Send confirmation email
       try {
-        const baseUrl = import.meta.env.VITE_APP_URL
-          ? window.location.origin
-          : 'https://jetsetterss.com';
+        const baseUrl = apiConfig.baseUrl;
+        
+        // Ensure URL is properly constructed with slash
+        const apiUrl = `${baseUrl}${baseUrl.endsWith('/') ? '' : '/'}api/send-email`;
 
         // Convert any potential Date objects to strings
         const checkInString = typeof checkInDate === 'string' ? checkInDate : String(checkInDate);
         const checkOutString = typeof checkOutDate === 'string' ? checkOutDate : String(checkOutDate);
 
-        const emailResponse = await fetch(`${baseUrl}/api/send-email`, {
+        const emailResponse = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -981,7 +1006,7 @@ export default function HotelDetails() {
                         <label className="block text-xs text-gray-500 mb-1">CHECK-IN</label>
                         <div className="flex items-center">
                           <Calendar size={16} className="text-gray-400 mr-2" />
-                          <span className="text-gray-800">{checkInDate}</span>
+                          <span className="text-gray-800">{format(new Date(checkInDate), 'MMM dd, yyyy')}</span>
                         </div>
                       </div>
                       <div
@@ -991,7 +1016,7 @@ export default function HotelDetails() {
                         <label className="block text-xs text-gray-500 mb-1">CHECK-OUT</label>
                         <div className="flex items-center">
                           <Calendar size={16} className="text-gray-400 mr-2" />
-                          <span className="text-gray-800">{checkOutDate}</span>
+                          <span className="text-gray-800">{format(new Date(checkOutDate), 'MMM dd, yyyy')}</span>
                         </div>
                       </div>
                     </div>
@@ -1448,11 +1473,11 @@ export default function HotelDetails() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 mb-1">CHECK-IN</p>
-                  <p className="font-medium">{checkInDate}</p>
+                  <p className="font-medium">{format(new Date(checkInDate), 'MMM dd, yyyy')}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-1">CHECK-OUT</p>
-                  <p className="font-medium">{checkOutDate}</p>
+                  <p className="font-medium">{format(new Date(checkOutDate), 'MMM dd, yyyy')}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-1">GUESTS</p>

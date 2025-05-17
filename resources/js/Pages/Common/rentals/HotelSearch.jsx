@@ -9,6 +9,7 @@ import apiConfig from '../../../../../src/config/api.js';
 const HotelSearch = () => {
  
 const location = useLocation();
+const navigate = useNavigate();
 const hotels = location.state?.hotels;
 
   // Try to load last search from session storage
@@ -26,10 +27,14 @@ const hotels = location.state?.hotels;
         };
       }
     }
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
     return {
       cityCode: '',
-      checkInDate: new Date().toISOString().split('T')[0],
-      checkOutDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0],
+      checkInDate: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
+      checkOutDate: `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`,
       adults: 2
     };
   });
@@ -89,27 +94,46 @@ const hotels = location.state?.hotels;
     }
 
     try {
-      // Format dates as YYYY-MM-DD
-      const formattedDates = `${searchParams.checkInDate} - ${searchParams.checkOutDate}`;
+      // Format dates properly as YYYY-MM-DD for API
+      const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      };
+
+      const formattedCheckInDate = formatDate(searchParams.checkInDate);
+      const formattedCheckOutDate = formatDate(searchParams.checkOutDate);
+
+      console.log('Searching with params:', {
+        destination: searchParams.cityCode,
+        checkInDate: formattedCheckInDate,
+        checkOutDate: formattedCheckOutDate,
+        travelers: searchParams.adults
+      });
 
       const response = await axios.post(apiConfig.endpoints.hotels.search, {
         destination: searchParams.cityCode,
-        dates: formattedDates,
-        travelers: searchParams.adults,
-        packageType: 'All Inclusive'
+        checkInDate: formattedCheckInDate,
+        checkOutDate: formattedCheckOutDate,
+        travelers: searchParams.adults
       });
 
       if (response.data.success) {
         // Store search params in session storage for persistence
         sessionStorage.setItem('lastHotelSearch', JSON.stringify({
           ...searchParams,
+          checkInDate: formattedCheckInDate,
+          checkOutDate: formattedCheckOutDate,
           timestamp: new Date().toISOString()
         }));
 
         navigate('/hotels/results', { 
           state: { 
             searchResults: response.data.data,
-            searchParams: searchParams 
+            searchParams: {
+              ...searchParams,
+              checkInDate: formattedCheckInDate,
+              checkOutDate: formattedCheckOutDate
+            }
           }
         });
       } else {
@@ -124,11 +148,10 @@ const hotels = location.state?.hotels;
   };
 
   const handleDateChange = (date, field) => {
-    const formattedDate = date.toISOString().split('T')[0];
-    setSearchParams(prev => ({
-      ...prev,
-      [field]: formattedDate
-    }));
+    setSearchParams({
+      ...searchParams,
+      [field]: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    });
   };
 
   return (

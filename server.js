@@ -1,8 +1,14 @@
-import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
+// Load environment variables as early as possible
+dotenv.config();
+// Also try to load from backend/.env if the main one doesn't exist
+dotenv.config({ path: './backend/.env' });
+
+// After loading env vars, import the rest of dependencies
+import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cors from 'cors';
 import authRoutes from './backend/routes/auth.routes.js';
 import userRoutes from './backend/routes/user.routes.js';
 import emailRoutes from './backend/routes/email.routes.js';
@@ -10,59 +16,66 @@ import flightRoutes from './backend/routes/flight.routes.js';
 import hotelRoutes from './backend/routes/hotel.routes.js';
 import supabase from './backend/config/supabase.js';
 
-// Initialize environment variables
-dotenv.config();
-
-const app = express();
-const PORT = process.env.PORT || 5001;
-
-// Get directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// CORS configuration
-const corsOptions = {
-  origin: true, // Allow all origins
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  optionsSuccessStatus: 200,
-  exposedHeaders: ['set-cookie']
-};
-console.log('ddddddddddddddddddddddddd')
+const app = express();
 
-// Middleware
-app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Add headers for additional CORS support
-app.use((req, res, next) => {
-  // Set CORS headers for all responses
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-csrf-token');
-  res.setHeader('Access-Control-Expose-Headers', 'set-cookie');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  // Log the request for debugging
-  console.log(`💫 CORS headers set for ${req.method} ${req.url}`);
-  next();
+// Log key environment information for debugging
+console.log('Environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  AMADEUS_KEYS_SET: !!(process.env.AMADEUS_API_KEY && process.env.AMADEUS_API_SECRET),
+  REACT_APP_KEYS_SET: !!(process.env.REACT_APP_AMADEUS_API_KEY && process.env.REACT_APP_AMADEUS_API_SECRET)
 });
 
-// Global request debugging middleware
-app.use((req, res, next) => {
-  console.log(`📥 ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
-  console.log(`📥 Headers: ${JSON.stringify(req.headers)}`);
-  if (req.body && Object.keys(req.body).length > 0) {
-    console.log(`📥 Body: ${JSON.stringify(req.body)}`);
-  }
-  next();
+const PORT = process.env.PORT || 5002;
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'x-csrf-token']
+}));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/hotels', hotelRoutes);
+app.use('/api/flights', flightRoutes);
+app.use('/api/email', emailRoutes);
+
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working!' });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date(),
+    env: process.env.NODE_ENV,
+    apiKeys: {
+      amadeus: !!process.env.AMADEUS_API_KEY || !!process.env.REACT_APP_AMADEUS_API_KEY
+    }
+  });
+});
+
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'dist')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  });
+}
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
 // Test Supabase connection
@@ -105,13 +118,6 @@ const testSupabaseConnection = async (retryCount = 0, maxRetries = 5) => {
 
 // Initialize Supabase connection on startup
 testSupabaseConnection();
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/email', emailRoutes);
-app.use('/api/flights', flightRoutes);
-app.use('/api/hotels', hotelRoutes);
 
 // Direct test email endpoint
 app.post('/api/send-email', async (req, res) => {
@@ -261,76 +267,70 @@ app.use('/api/email/*', (req, res, next) => {
   console.log('🔍 Request body:', req.body);
   next();
 });
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
-}
 
 // For local development
 if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === undefined) {
   const findAvailablePort = async (startPort) => {
-  const maxPort = 65535;
-  let port = parseInt(startPort, 10);
+    const maxPort = 65535;
+    let port = parseInt(startPort, 10);
 
-  while (port <= maxPort) {
-    try {
-      await new Promise((resolve, reject) => {
-        const server = app.listen(port)
-          .once('listening', () => {
-            server.close();
-            resolve();
-          })
-          .once('error', (err) => {
-            if (err.code === 'EADDRINUSE') {
-              reject(err);
-            } else {
-              reject(err);
-            }
-          });
-      });
-      return port;
-    } catch (err) {
-      if (err.code === 'EADDRINUSE') {
-        console.log(`⚠️ Port ${port} is in use, trying next port...`);
-        port++;
-        continue;
-      }
-      throw err;
-    }
-  }
-  throw new Error('No available ports found');
-};
-
-const startServer = async () => {
-  try {
-    const port = await findAvailablePort(PORT);
-    const server = app.listen(port, () => {
-      console.log(`🚀 Server running on port ${port}`);
-      
-      // Re-apply CORS middleware with updated settings
-      app.use((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With, x-csrf-token');
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Expose-Headers', 'set-cookie');
-        
-        if (req.method === 'OPTIONS') {
-          return res.sendStatus(200);
+    while (port <= maxPort) {
+      try {
+        await new Promise((resolve, reject) => {
+          const server = app.listen(port)
+            .once('listening', () => {
+              server.close();
+              resolve();
+            })
+            .once('error', (err) => {
+              if (err.code === 'EADDRINUSE') {
+                reject(err);
+              } else {
+                reject(err);
+              }
+            });
+        });
+        return port;
+      } catch (err) {
+        if (err.code === 'EADDRINUSE') {
+          console.log(`⚠️ Port ${port} is in use, trying next port...`);
+          port++;
+          continue;
         }
-        next();
-      });
-    });
-  } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-};
+        throw err;
+      }
+    }
+    throw new Error('No available ports found');
+  };
 
-startServer();}
+  const startServer = async () => {
+    try {
+      const port = await findAvailablePort(PORT);
+      const server = app.listen(port, () => {
+        console.log(`🚀 Server running on port ${port}`);
+        
+        // Re-apply CORS middleware with updated settings
+        app.use((req, res, next) => {
+          res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+          res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
+          res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With, x-csrf-token');
+          res.header('Access-Control-Allow-Credentials', 'true');
+          res.header('Access-Control-Expose-Headers', 'set-cookie');
+          
+          if (req.method === 'OPTIONS') {
+            return res.sendStatus(200);
+          }
+          next();
+        });
+      });
+    } catch (error) {
+      console.error('❌ Failed to start server:', error);
+      process.exit(1);
+    }
+  };
+
+  startServer();
+}
 
 // For Vercel serverless deployment
 export default app;

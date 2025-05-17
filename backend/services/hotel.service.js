@@ -3,14 +3,17 @@ import axios from 'axios';
 
 class HotelService {
   constructor() {
+    const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY;
+    const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET;
+
     this.amadeus = new Amadeus({
-      clientId: process.env.REACT_APP_AMADEUS_API_KEY,
-      clientSecret: process.env.REACT_APP_AMADEUS_API_SECRET
+      clientId: apiKey,
+      clientSecret: apiSecret
     });
 
-    console.log('Hotel service initialized with:', {
-      apiKey: process.env.REACT_APP_AMADEUS_API_KEY,
-      apiSecret: process.env.REACT_APP_AMADEUS_API_SECRET ? '***' : 'missing'
+    console.log('HotelService: Initialized with API credentials:', {
+      apiKey: apiKey ? '[PRESENT]' : '[MISSING]',
+      apiSecret: apiSecret ? '[PRESENT]' : '[MISSING]'
     });
 
     // Cache for destinations to avoid frequent API calls
@@ -21,6 +24,14 @@ class HotelService {
 
   async getAccessToken() {
     try {
+      console.log('HotelService: Getting access token from Amadeus');
+      const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY;
+      const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET;
+      
+      if (!apiKey || !apiSecret) {
+        throw new Error('Missing Amadeus API credentials');
+      }
+      
       const response = await axios.post(
         'https://test.api.amadeus.com/v1/security/oauth2/token',
         new URLSearchParams({ grant_type: 'client_credentials' }).toString(),
@@ -29,16 +40,20 @@ class HotelService {
             'Content-Type': 'application/x-www-form-urlencoded',
           },
           auth: {
-            username: process.env.REACT_APP_AMADEUS_API_KEY,
-            password: process.env.REACT_APP_AMADEUS_API_SECRET,
+            username: apiKey,
+            password: apiSecret,
           }
         }
       );
     
+      console.log('HotelService: Successfully obtained access token');
       return response.data.access_token;
     } catch (error) {
-      console.error('Error getting access token:', error.response?.data || error.message);
-      throw new Error('Failed to get access token');
+      console.error('HotelService: Error getting access token:', 
+        error.response?.status,
+        error.response?.data || error.message
+      );
+      throw new Error('Failed to get access token from Amadeus');
     }
   }
 
@@ -98,104 +113,87 @@ class HotelService {
     }
   }
 
-  async searchHotels(query) {
+  async searchHotels(destination, checkInDate, checkOutDate, adults = 1) {
     try {
-      const { cityCode, checkInDate, checkOutDate, adults = 2 } = query;
-      
-      if (!cityCode) {
-        throw new Error('City code is required');
-      }
+      console.log('HotelService: searchHotels called with params:', {
+        destination,
+        checkInDate,
+        checkOutDate,
+        adults
+      });
 
-      // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(new Date().getTime() + 24 * 60 * 60 * 1000)
-        .toISOString().split('T')[0];
-      
-      // Use provided dates or fallback to today/tomorrow
-      const searchDates = {
-        checkIn: checkInDate || today,
-        checkOut: checkOutDate || tomorrow
+      // Validate dates
+      const isValidDate = (dateStr) => {
+        const d = new Date(dateStr);
+        return !isNaN(d.getTime());
       };
 
-      // Get hotels in city first
-      const hotelsResponse = await this.getHotelsByCity(cityCode);
-      
-      if (!hotelsResponse.data || hotelsResponse.data.length === 0) {
-        return { data: [] };
+      if (!isValidDate(checkInDate) || !isValidDate(checkOutDate)) {
+        console.error('HotelService: Invalid date format', { checkInDate, checkOutDate });
+        throw new Error('INVALID DATE');
       }
-      
-      // Get hotel IDs (limit to first 10 for performance)
-      const hotelIds = hotelsResponse.data.slice(0, 10).map(hotel => hotel.hotelId).join(',');
-      
-      // Search for hotel offers
-      const token = await this.getAccessToken();
-      
-      const response = await axios.get('https://test.api.amadeus.com/v3/shopping/hotel-offers', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.amadeus+json'
-        },
-        params: {
-          hotelIds: hotelIds,
-          checkInDate: searchDates.checkIn,
-          checkOutDate: searchDates.checkOut,
-          adults: adults,
-          roomQuantity: 1,
-          currency: 'USD',
-          bestRateOnly: true
-        }
+
+      // Ensure date format is YYYY-MM-DD
+      const formatDate = (dateStr) => {
+        const d = new Date(dateStr);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
+      const formattedCheckIn = formatDate(checkInDate);
+      const formattedCheckOut = formatDate(checkOutDate);
+
+      console.log('HotelService: Using formatted dates:', {
+        formattedCheckIn,
+        formattedCheckOut
       });
-      
-      // Add additional display attributes to each hotel result
-      if (response.data && response.data.data) {
-        response.data.data = response.data.data.map(hotel => {
-          // Find the corresponding hotel from the city search to get more details
-          const hotelInfo = hotelsResponse.data.find(h => h.hotelId === hotel.hotel.hotelId);
-          
-          return {
-            ...hotel,
-            hotel: {
-              ...hotel.hotel,
-              name: hotel.hotel.name || (hotelInfo ? hotelInfo.name : 'Unknown Hotel'),
-              cityName: hotelInfo ? hotelInfo.address?.cityName : '',
-              address: {
-                ...hotel.hotel.address,
-                cityName: hotelInfo ? hotelInfo.address?.cityName : '',
-                countryName: hotelInfo ? hotelInfo.address?.countryName : ''
-              },
-              rating: hotel.hotel.rating || (hotelInfo ? hotelInfo.rating : ''),
-              amenities: hotel.hotel.amenities || [],
-              media: hotel.hotel.media || [],
-              description: hotel.hotel.description || 'No description available',
-              contact: hotel.hotel.contact || {}
-            }
-          };
-        });
-      }
-      
-      return response.data || { data: [] };
+
+      // Make the API call to Amadeus
+      const response = await this.amadeus.shopping.hotelOffers.get({
+        cityCode: destination,
+        checkInDate: formattedCheckIn,
+        checkOutDate: formattedCheckOut,
+        adults: adults,
+        roomQuantity: 1,
+        currency: 'USD'
+      });
+
+      console.log(`HotelService: Search successful, found ${response.data.length || 0} hotels`);
+      return response.data;
     } catch (error) {
-      console.error('Error searching hotels:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.errors?.[0]?.detail || error.message || 'Failed to search hotels');
+      console.error('HotelService: Error searching hotels:', error.message, error.response?.data || error.description || error);
+      throw new Error(`Amadeus Error - ${error.description || error.message || 'UNKNOWN ERROR'}`);
     }
   }
 
   async getHotelDetails(hotelId) {
     try {
-      console.log('Getting hotel details for ID:', hotelId);
+      console.log('HotelService: Getting hotel details for ID:', hotelId);
+      
+      if (!hotelId) {
+        throw new Error('Hotel ID is required');
+      }
+      
       const token = await this.getAccessToken();
+      console.log('HotelService: Successfully obtained access token');
       
       // First get the hotel information
       const hotelResponse = await axios.get(`https://test.api.amadeus.com/v1/reference-data/locations/hotels/${hotelId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
+      }).catch(error => {
+        console.error('HotelService: Amadeus API Error:', error.response?.status, error.response?.data || error.message);
+        throw new Error(`Hotel not found: ${error.response?.data?.errors?.[0]?.detail || error.message}`);
       });
       
       if (!hotelResponse.data || !hotelResponse.data.data) {
+        console.error('HotelService: Empty response from Amadeus API');
         throw new Error('Hotel not found');
       }
       
+      console.log('HotelService: Successfully fetched hotel details:', hotelResponse.data.data.name);
+      
+      // Return properly formatted hotel data
       return {
         ...hotelResponse.data.data,
         // Add additional fields for the frontend display
@@ -203,23 +201,52 @@ class HotelService {
           `${hotelResponse.data.data.address.lines?.join(', ') || ''}, ${hotelResponse.data.data.address.cityName || ''}, ${hotelResponse.data.data.address.countryName || ''}` : 
           'Address unavailable',
         phone: hotelResponse.data.data.contact?.phone || 'Phone unavailable',
-        email: hotelResponse.data.data.contact?.email || 'Email unavailable'
+        email: hotelResponse.data.data.contact?.email || 'Email unavailable',
+        description: hotelResponse.data.data.description || 'No description available'
       };
     } catch (error) {
-      console.error('Error getting hotel details:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.errors?.[0]?.detail || error.message || 'Failed to get hotel details');
+      console.error('HotelService: Error getting hotel details:', error.message);
+      throw new Error(error.message || 'Failed to get hotel details');
     }
   }
 
   async getHotelOffers(hotelId, params) {
     try {
-      console.log('Getting hotel offers for ID:', hotelId);
+      console.log('HotelService: Getting hotel offers for ID:', hotelId, 'with params:', params);
       
       const { checkInDate, checkOutDate, adults = 2, children = 0 } = params;
+      
+      if (!hotelId) {
+        throw new Error('Hotel ID is required');
+      }
       
       if (!checkInDate || !checkOutDate) {
         throw new Error('Check-in and check-out dates are required');
       }
+      
+      // Validate dates
+      const isValidDate = (dateStr) => {
+        const d = new Date(dateStr);
+        return !isNaN(d.getTime());
+      };
+
+      if (!isValidDate(checkInDate) || !isValidDate(checkOutDate)) {
+        throw new Error('Invalid date format');
+      }
+
+      // Format dates properly
+      const formatDate = (dateStr) => {
+        const d = new Date(dateStr);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
+      const formattedCheckIn = formatDate(checkInDate);
+      const formattedCheckOut = formatDate(checkOutDate);
+      
+      console.log('HotelService: Using formatted dates for offers:', {
+        formattedCheckIn,
+        formattedCheckOut
+      });
       
       const token = await this.getAccessToken();
       
@@ -230,19 +257,28 @@ class HotelService {
         },
         params: {
           hotelIds: hotelId,
-          checkInDate,
-          checkOutDate,
+          checkInDate: formattedCheckIn,
+          checkOutDate: formattedCheckOut,
           adults: adults,
           children: children,
           roomQuantity: 1,
           currency: 'USD',
           bestRateOnly: false
         }
+      }).catch(error => {
+        console.error('HotelService: Amadeus offers API Error:', 
+          error.response?.status, 
+          error.response?.data?.errors || error.message
+        );
+        throw new Error(`No offers available: ${error.response?.data?.errors?.[0]?.detail || error.message}`);
       });
       
       if (!response.data || !response.data.data || response.data.data.length === 0) {
+        console.log('HotelService: No offers found for hotel:', hotelId);
         return { offers: [] };
       }
+      
+      console.log(`HotelService: Found ${response.data.data[0].offers?.length || 0} offers for hotel ${hotelId}`);
       
       // Enhance the offers with additional display info
       const hotelData = response.data.data[0];
@@ -252,7 +288,7 @@ class HotelService {
           // Add computed properties for the frontend
           formattedPrice: `$${parseFloat(offer.price.total).toFixed(2)} ${offer.price.currency}`,
           roomDescription: offer.room?.description?.text || 'Standard Room',
-          cancellationPolicy: offer.policies?.cancellation?.description || 'Cancellation policy not available',
+          cancellationPolicy: offer.policies?.cancellation?.description?.text || 'Cancellation policy not available',
           bedType: offer.room?.typeEstimated?.bedType || 'Standard',
           amenities: offer.room?.amenities || []
         };
@@ -263,8 +299,8 @@ class HotelService {
         offers
       };
     } catch (error) {
-      console.error('Error getting hotel offers:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.errors?.[0]?.detail || error.message || 'Failed to get hotel offers');
+      console.error('HotelService: Error getting hotel offers:', error.message);
+      throw new Error(error.message || 'Failed to get hotel offers');
     }
   }
 
