@@ -4,6 +4,8 @@ import { FaPlane, FaHotel, FaCar, FaUtensils, FaCalendarAlt, FaUsers, FaCreditCa
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import withPageElements from "../PageWrapper";
+import currencyService from '../../../Services/CurrencyService';
+import Price from '../../../Components/Price';
 
 const PackageBookingSummary = () => {
   const navigate = useNavigate();
@@ -570,20 +572,20 @@ const PackageBookingSummary = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Base Price</span>
-                      <span>${bookingDetails.pricing.basePrice.toFixed(2)}</span>
+                      <span><Price amount={bookingDetails.pricing.basePrice} /></span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Taxes</span>
-                      <span>${bookingDetails.pricing.taxes.toFixed(2)}</span>
+                      <span><Price amount={bookingDetails.pricing.taxes} /></span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Service Fees</span>
-                      <span>${bookingDetails.pricing.fees.toFixed(2)}</span>
+                      <span><Price amount={bookingDetails.pricing.fees} /></span>
                     </div>
                     <div className="border-t pt-2 mt-2">
                       <div className="flex justify-between font-semibold">
                         <span>Total</span>
-                        <span className="text-[#0066b2]">${bookingDetails.pricing.total.toFixed(2)}</span>
+                        <span className="text-[#0066b2]"><Price amount={bookingDetails.pricing.total} /></span>
                       </div>
                     </div>
                   </div>

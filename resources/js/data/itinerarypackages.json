@@ -160,7 +160,7 @@
         "duration": "7 nights / 8 days",
         "inclusions": {
           "accommodation": [
-            "7 nights stay at 4-star hotels"
+            "7 nights stay at 4-star hotels in Paris, Rome, and Florence"
           ],
           "meals": [
             "Daily breakfast at hotels",
@@ -179,6 +179,25 @@
             "Colosseum tour in Rome"
           ]
         },
+        "exclusions": {
+          "flights": [
+            "International airfare to Paris and from Rome"
+          ],
+          "personal_expenses": [
+            "Shopping, tips, and personal activities not included in the itinerary",
+            "Extra meals and beverages beyond what is mentioned"
+          ],
+          "optional_activities": [
+            "Museum entry fees not specified in the inclusions",
+            "Guided tours beyond those mentioned in the inclusions"
+          ],
+          "travel_insurance": [
+            "Travel and medical insurance are not covered"
+          ],
+          "visa_fees": [
+            "Schengen visa costs (if applicable)"
+          ]
+        },
         "itinerary": [
           {
             "day": 1,
@@ -186,11 +205,170 @@
             "activities": [
               {
                 "time": "Morning",
-                "description": "Arrival and hotel check-in"
+                "description": "Arrival at Paris Charles de Gaulle Airport"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Hotel check-in and leisure time"
               },
               {
                 "time": "Evening",
-                "description": "Seine River dinner cruise"
+                "description": "Welcome dinner cruise on the Seine River with views of illuminated Paris landmarks"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel in Paris"
+              }
+            ]
+          },
+          {
+            "day": 2,
+            "title": "Paris Exploration",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Guided tour of Paris highlights",
+                "details": [
+                  "Visit to the Eiffel Tower with skip-the-line access",
+                  "Panoramic city tour including Champs-Élysées and Arc de Triomphe",
+                  "Stop at Notre Dame Cathedral exterior"
+                ]
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit the Louvre Museum with skip-the-line entry to see Mona Lisa and other masterpieces"
+              },
+              {
+                "time": "Evening",
+                "description": "Free time to explore Montmartre and Sacré-Cœur Basilica"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel in Paris"
+              }
+            ]
+          },
+          {
+            "day": 3,
+            "title": "Paris to Rome",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Transfer to Paris airport for flight to Rome"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Arrival in Rome, hotel check-in, and orientation walk"
+              },
+              {
+                "time": "Evening",
+                "description": "Free time to explore the Trevi Fountain and Spanish Steps area"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel in Rome"
+              }
+            ]
+          },
+          {
+            "day": 4,
+            "title": "Ancient Rome",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Guided tour of the Colosseum and Roman Forum with skip-the-line access"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit to Palatine Hill to explore ancient Roman palaces"
+              },
+              {
+                "time": "Evening",
+                "description": "Traditional Italian dinner in Trastevere neighborhood"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel in Rome"
+              }
+            ]
+          },
+          {
+            "day": 5,
+            "title": "Vatican City",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Guided tour of Vatican Museums, Sistine Chapel, and St. Peter's Basilica"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Free time to explore more of Rome at your leisure"
+              },
+              {
+                "time": "Evening",
+                "description": "Optional food tour in Rome (additional cost)"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel in Rome"
+              }
+            ]
+          },
+          {
+            "day": 6,
+            "title": "Rome to Florence",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "High-speed train from Rome to Florence"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Check-in at Florence hotel followed by orientation walk"
+              },
+              {
+                "time": "Evening",
+                "description": "Leisure time to explore Florence's historic center"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel in Florence"
+              }
+            ]
+          },
+          {
+            "day": 7,
+            "title": "Florence Art and Culture",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Guided tour of Accademia Gallery to see Michelangelo's David"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit to Uffizi Gallery to admire Renaissance masterpieces"
+              },
+              {
+                "time": "Evening",
+                "description": "Farewell dinner with Tuscan specialties"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at your hotel in Florence"
+              }
+            ]
+          },
+          {
+            "day": 8,
+            "title": "Departure",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Breakfast at hotel and check-out"
+              },
+              {
+                "time": "Transfer",
+                "description": "Transfer to Florence airport for departure"
               }
             ]
           }
@@ -206,21 +384,44 @@
         "duration": "5 nights / 6 days",
         "inclusions": {
           "accommodation": [
-            "5 nights in luxury houseboats and hotels"
+            "2 nights in luxury houseboat on Dal Lake",
+            "2 nights in Gulmarg hotel",
+            "1 night in Pahalgam hotel"
           ],
           "meals": [
-            "All meals included",
-            "Traditional Kashmiri cuisine experiences"
+            "Daily breakfast and dinner",
+            "Welcome Kashmiri Wazwan feast",
+            "Floating market breakfast experience"
           ],
           "transfers": [
             "Airport transfers",
-            "All local sightseeing transfers"
+            "All local sightseeing transfers by private vehicle"
           ],
           "tours_activities": [
             "Shikara ride on Dal Lake",
             "Mughal Gardens tour",
             "Gulmarg Gondola ride",
-            "Pahalgam valley tour"
+            "Pahalgam valley excursion",
+            "Local craft demonstrations"
+          ]
+        },
+        "exclusions": {
+          "flights": [
+            "Airfare to/from Srinagar"
+          ],
+          "personal_expenses": [
+            "Shopping, tips, and personal expenses",
+            "Additional meals not mentioned in inclusions"
+          ],
+          "optional_activities": [
+            "Snow sports equipment rental in Gulmarg",
+            "Horse riding in Pahalgam"
+          ],
+          "travel_insurance": [
+            "Travel and medical insurance"
+          ],
+          "permits": [
+            "Special area permits if required"
           ]
         },
         "itinerary": [
@@ -230,11 +431,150 @@
             "activities": [
               {
                 "time": "Morning",
-                "description": "Airport pickup and houseboat check-in"
+                "description": "Arrival at Srinagar Airport and transfer to houseboat"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Check-in and relax in your luxury houseboat on Dal Lake"
               },
               {
                 "time": "Evening",
-                "description": "Shikara ride on Dal Lake"
+                "description": "Shikara ride on Dal Lake at sunset",
+                "details": [
+                  "Experience the beautiful sunset views over the lake",
+                  "See the floating vegetable markets",
+                  "Photo opportunities with traditional Shikaras"
+                ]
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay in luxury houseboat on Dal Lake"
+              }
+            ]
+          },
+          {
+            "day": 2,
+            "title": "Mughal Gardens Tour",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Visit the famous Mughal Gardens",
+                "details": [
+                  "Nishat Bagh (Garden of Pleasure)",
+                  "Shalimar Bagh (Garden of Love)",
+                  "Chashme Shahi (Royal Spring)"
+                ]
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit to local handicraft centers to see Kashmiri artisans at work"
+              },
+              {
+                "time": "Evening",
+                "description": "Traditional Wazwan dinner experience on the houseboat"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay in luxury houseboat on Dal Lake"
+              }
+            ]
+          },
+          {
+            "day": 3,
+            "title": "Srinagar to Gulmarg",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "After breakfast, drive to Gulmarg (56 km, approx. 2 hours)"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Gondola ride to Kongdoori Mountain for panoramic Himalayan views",
+                "details": [
+                  "Phase 1 of the Gondola ride to Kongdoori",
+                  "Optional Phase 2 to Apharwat Peak (additional cost)",
+                  "Spectacular views of surrounding mountains"
+                ]
+              },
+              {
+                "time": "Evening",
+                "description": "Leisure time to explore Gulmarg's meadows and surroundings"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at hotel in Gulmarg"
+              }
+            ]
+          },
+          {
+            "day": 4,
+            "title": "Gulmarg Activities",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Activities in Gulmarg (based on season)",
+                "details": [
+                  "Winter: Skiing or snowboarding (equipment rental at additional cost)",
+                  "Summer: Golf at the world's highest golf course or nature walks",
+                  "Photography session at the scenic spots"
+                ]
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit to St. Mary's Church and Maharani Temple"
+              },
+              {
+                "time": "Evening",
+                "description": "Bonfire and cultural activities at the hotel"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at hotel in Gulmarg"
+              }
+            ]
+          },
+          {
+            "day": 5,
+            "title": "Gulmarg to Pahalgam",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Drive to Pahalgam (125 km, approx. 3.5 hours)"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Explore Pahalgam Valley",
+                "details": [
+                  "Visit to Betaab Valley",
+                  "Explore Aru Valley",
+                  "Lidder River views and photo stops"
+                ]
+              },
+              {
+                "time": "Evening",
+                "description": "Leisure time to explore Pahalgam local market"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at hotel in Pahalgam"
+              }
+            ]
+          },
+          {
+            "day": 6,
+            "title": "Pahalgam to Srinagar for Departure",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Breakfast and check-out"
+              },
+              {
+                "time": "Transfer",
+                "description": "Drive to Srinagar Airport (90 km, approx. 2.5 hours)"
+              },
+              {
+                "time": "Departure",
+                "description": "Depart from Srinagar with unforgettable Kashmir memories"
               }
             ]
           }
@@ -250,21 +590,36 @@
         "duration": "6 nights / 7 days",
         "inclusions": {
           "accommodation": [
-            "6 nights in hotels and traditional homestays"
+            "6 nights in handpicked hotels and lodges"
           ],
           "meals": [
-            "All meals included",
-            "Local cuisine experiences"
+            "Daily breakfast",
+            "3 authentic local dinners",
+            "1 tribal cuisine experience"
           ],
           "transfers": [
             "Airport transfers",
-            "All local transportation"
+            "All transportation by private vehicle"
           ],
           "tours_activities": [
-            "Living root bridges trek",
-            "River rafting in Arunachal",
-            "Tea garden visits",
-            "Cultural village tours"
+            "Root bridge trek in Meghalaya",
+            "Tea plantation tour in Darjeeling",
+            "River rafting in Arunachal (seasonal)",
+            "Cultural performances"
+          ]
+        },
+        "exclusions": {
+          "flights": [
+            "Airfare to/from Northeast India"
+          ],
+          "personal_expenses": [
+            "Shopping, tips, and personal expenses"
+          ],
+          "optional_activities": [
+            "Additional activities not mentioned in inclusions"
+          ],
+          "permits": [
+            "Special permits for restricted areas (if applicable)"
           ]
         },
         "itinerary": [
@@ -274,11 +629,167 @@
             "activities": [
               {
                 "time": "Morning",
-                "description": "Airport pickup and hotel check-in"
+                "description": "Arrive at Guwahati Airport and transfer to hotel"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit Kamakhya Temple and Brahmaputra River cruise"
               },
               {
                 "time": "Evening",
-                "description": "Visit Kamakhya Temple"
+                "description": "Welcome dinner with Assamese cuisine"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at hotel in Guwahati"
+              }
+            ]
+          },
+          {
+            "day": 2,
+            "title": "Guwahati to Shillong",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Drive to Shillong (100 km, approx. 3 hours)"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Visit Elephant Falls and Shillong Peak for panoramic views",
+                "details": [
+                  "Three-tiered waterfall experience",
+                  "Viewpoint overlooking Shillong city",
+                  "Photo opportunities of the surrounding landscapes"
+                ]
+              },
+              {
+                "time": "Evening",
+                "description": "Explore Police Bazaar market area"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at hotel in Shillong"
+              }
+            ]
+          },
+          {
+            "day": 3,
+            "title": "Cherrapunji Exploration",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Day trip to Cherrapunji (54 km, approx. 2 hours)",
+                "details": [
+                  "Visit Nohkalikai Falls, India's tallest plunge waterfall",
+                  "Seven Sisters Falls viewpoint",
+                  "Mawsmai Cave exploration"
+                ]
+              },
+              {
+                "time": "Afternoon",
+                "description": "Trek to the living root bridges in Nongriat village"
+              },
+              {
+                "time": "Evening",
+                "description": "Return to Shillong"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at hotel in Shillong"
+              }
+            ]
+          },
+          {
+            "day": 4,
+            "title": "Shillong to Kaziranga",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Drive to Kaziranga National Park (280 km, approx. 6 hours)"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Check-in at jungle resort"
+              },
+              {
+                "time": "Evening",
+                "description": "Orientation about Kaziranga and wildlife lecture"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at jungle resort in Kaziranga"
+              }
+            ]
+          },
+          {
+            "day": 5,
+            "title": "Kaziranga Safari",
+            "activities": [
+              {
+                "time": "Early Morning",
+                "description": "Elephant safari in the Central Range of Kaziranga",
+                "details": [
+                  "Opportunity to spot one-horned rhinoceros",
+                  "Elephant-back safari through tall elephant grass",
+                  "Wildlife viewing in natural habitat"
+                ]
+              },
+              {
+                "time": "Afternoon",
+                "description": "Jeep safari in the Western Range"
+              },
+              {
+                "time": "Evening",
+                "description": "Cultural performance by local tribes at the resort"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at jungle resort in Kaziranga"
+              }
+            ]
+          },
+          {
+            "day": 6,
+            "title": "Kaziranga to Majuli Island",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Drive to Nimati Ghat (130 km, approx. 3 hours)"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Ferry to Majuli, the world's largest river island",
+                "details": [
+                  "Scenic ferry ride on the Brahmaputra River",
+                  "Check-in at traditional Mishing tribe homestay",
+                  "Visit Satras (Vaishnavite monasteries)"
+                ]
+              },
+              {
+                "time": "Evening",
+                "description": "Experience mask-making demonstration and cultural activities"
+              },
+              {
+                "time": "Overnight",
+                "description": "Stay at traditional homestay in Majuli"
+              }
+            ]
+          },
+          {
+            "day": 7,
+            "title": "Majuli to Jorhat for Departure",
+            "activities": [
+              {
+                "time": "Morning",
+                "description": "Breakfast and explore more of Majuli Island"
+              },
+              {
+                "time": "Afternoon",
+                "description": "Ferry back to Nimati Ghat and transfer to Jorhat Airport"
+              },
+              {
+                "time": "Departure",
+                "description": "Depart from Jorhat Airport with memorable Northeast experiences"
               }
             ]
           }

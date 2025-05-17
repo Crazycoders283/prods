@@ -5,6 +5,8 @@ import packagesData from '../../../data/packages.json'
 import Navbar from '../Navbar'
 import Footer from '../Footer'
 import withPageElements from "../PageWrapper"
+import currencyService from '../../../Services/CurrencyService'
+import Price from '../../../Components/Price'
 
 const SearchPackages = () => {
   const navigate = useNavigate()
@@ -355,8 +357,9 @@ const SearchPackages = () => {
                   <div>
                     <p className="text-gray-500 text-xs md:text-sm">Starting from</p>
                     <div className="flex items-center gap-0.5 md:gap-1">
-                      <DollarSign size={16} className="text-blue-600" />
-                      <span className="text-xl md:text-2xl font-bold text-blue-600">{pkg.price}</span>
+                      <span className="text-xl md:text-2xl font-bold text-blue-600">
+                        <Price amount={pkg.price.toString().replace(/[^0-9.]/g, '')} />
+                      </span>
                     </div>
                   </div>
                   <button className="bg-blue-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg flex items-center gap-1 text-xs md:text-sm font-medium group">

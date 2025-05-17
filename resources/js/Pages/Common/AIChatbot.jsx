@@ -83,6 +83,7 @@ const AIChatbot = () => {
             type: 'bot',
             content: 'I can help you with your cancellation request. Since you\'re logged in, I can see your bookings. Please let me know which reservation you\'d like to cancel.'
           };
+
         } else {
           botResponse = {
             type: 'bot',

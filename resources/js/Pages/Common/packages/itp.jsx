@@ -1,16 +1,25 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ChevronDown, MapPin, Calendar, Star, Clock, Users, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { FaHotel, FaPlane, FaUtensils, FaShieldAlt, FaCheck, FaMapMarkerAlt, FaRegClock, FaUsers, FaStar, FaCalendarAlt, FaPhoneAlt, FaEnvelope, FaCheckCircle } from "react-icons/fa";
 import itineraryData from '../../../data/itinerarypackages.json'
+import packagesData from '../../../data/packages.json'
 import Navbar from '../Navbar'
 import Footer from '../Footer'
 import packageCallbackService from '../../../Services/packageCallbackService';
 import withPageElements from "../PageWrapper";
+import currencyService from '../../../Services/CurrencyService';
+import Price from '../../../Components/Price';
 
 const ItineraryPackage = () => {
   const navigate = useNavigate();
-  const [selectedPackage, setSelectedPackage] = useState('dubai')
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const destinationParam = queryParams.get('destination');
+  const packageIdParam = queryParams.get('id');
+  
+  const [selectedPackage, setSelectedPackage] = useState(destinationParam || 'dubai');
+  const [packageId, setPackageId] = useState(packageIdParam || '1');
   const [expandedDay, setExpandedDay] = useState(null)
   const [showQuoteModal, setShowQuoteModal] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -29,39 +38,108 @@ const ItineraryPackage = () => {
   const [formSubmitSuccess, setFormSubmitSuccess] = useState(false);
   const [formSubmitError, setFormSubmitError] = useState('');
 
-  const packageData = itineraryData[selectedPackage]?.packages[0]
+  // Get the specific package data from packages.json
+  const specificPackage = packagesData[selectedPackage]?.packages.find(pkg => 
+    pkg.id.toString() === packageId.toString()
+  );
 
-  // Dubai images from Unsplash
-  const packageImages = [
-    {
-      url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-      caption: "Dubai Skyline with Burj Khalifa"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1526495124232-a04e1849168c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-      caption: "Dubai Marina at Night"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1584551246679-0daf2d10548a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-      caption: "Dubai Desert Safari"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1578681041175-9717c638f401?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-      caption: "Palm Jumeirah"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1582672752486-45c67f7b149c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
-      caption: "Dubai Mall Fountain"
+  // Set up destination images based on the package
+  const getPackageImages = () => {
+    // Use package-specific images if available, otherwise use default destination images
+    if (specificPackage) {
+      // Create an array of images from the specific package
+      return [{
+        url: specificPackage.image,
+        caption: specificPackage.title
+      }];
     }
-  ];
+    
+    // Default image sets by destination
+    const defaultImages = {
+      dubai: [
+        {
+          url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+          caption: "Dubai Skyline with Burj Khalifa"
+        },
+        {
+          url: "https://images.unsplash.com/photo-1526495124232-a04e1849168c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+          caption: "Dubai Marina at Night"
+        },
+        {
+          url: "https://images.unsplash.com/photo-1584551246679-0daf2d10548a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+          caption: "Dubai Desert Safari"
+        }
+      ],
+      europe: [
+        {
+          url: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2020&q=80",
+          caption: "European Landmarks"
+        },
+        {
+          url: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2073&q=80",
+          caption: "Paris and Eiffel Tower"
+        }
+      ],
+      kashmir: [
+        {
+          url: "https://images.unsplash.com/photo-1566837945700-30057527ade0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+          caption: "Kashmir Valley"
+        },
+        {
+          url: "https://images.unsplash.com/photo-1566837828676-d71608e815f7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
+          caption: "Gulmarg Ski Resort"
+        }
+      ],
+      northEast: [
+        {
+          url: "https://images.unsplash.com/photo-1626014303757-6366ef55c4ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80",
+          caption: "Meghalaya Living Root Bridge"
+        },
+        {
+          url: "https://images.unsplash.com/photo-1626074353765-517a681e40be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80",
+          caption: "Darjeeling Tea Gardens"
+        }
+      ]
+    };
+    
+    return defaultImages[selectedPackage] || defaultImages.dubai;
+  };
+
+  // Get the correct package data from itinerary data
+  const packageData = itineraryData[selectedPackage]?.packages[0];
+  
+  // Get the correct image set for the current package
+  const currentPackageImages = getPackageImages();
+
+  // Use specificPackage for the title, location and price
+  const packageTitle = specificPackage ? specificPackage.title : packageData?.title || 'Travel Package';
+  const packageLocation = specificPackage ? specificPackage.location : '';
+  const packagePrice = specificPackage ? specificPackage.price : 499;
+  const packageDuration = specificPackage ? specificPackage.duration : '4N/5D';
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % packageImages.length);
+    setCurrentImageIndex((prev) => (prev + 1) % currentPackageImages.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + packageImages.length) % packageImages.length);
+    setCurrentImageIndex((prev) => (prev - 1 + currentPackageImages.length) % currentPackageImages.length);
   };
+
+  // Reset currentImageIndex when destination changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [selectedPackage, packageId]);
+
+  // Use effect to update selectedPackage when URL parameter changes
+  useEffect(() => {
+    if (destinationParam) {
+      setSelectedPackage(destinationParam);
+    }
+    
+    if (packageIdParam) {
+      setPackageId(packageIdParam);
+    }
+  }, [destinationParam, packageIdParam]);
 
   const handleDayClick = (day) => {
     setExpandedDay(expandedDay === day ? null : day)
@@ -110,7 +188,7 @@ const ItineraryPackage = () => {
         guests: formData.guests || '2',
         budget: formData.budget || '500-1000',
         request: formData.request || '',
-        packageName: 'Dubai Explorer' // Default package name
+        packageName: packageData?.title || 'Travel Package'
       });
       
       console.log('Form submission result:', result);
@@ -156,14 +234,14 @@ const ItineraryPackage = () => {
           {/* Main Image */}
           <div className="absolute inset-0 transition-transform duration-700 ease-in-out transform">
             <img 
-              src={packageImages[currentImageIndex].url}
-              alt={packageImages[currentImageIndex].caption}
+              src={currentPackageImages[currentImageIndex].url}
+              alt={currentPackageImages[currentImageIndex].caption}
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent">
               <div className="absolute bottom-4 md:bottom-6 left-4 md:left-6 text-white">
-                <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">Dubai Explorer</h1>
-                <p className="text-sm md:text-lg text-white/90">{packageImages[currentImageIndex].caption}</p>
+                <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">{packageTitle}</h1>
+                <p className="text-sm md:text-lg text-white/90">{currentPackageImages[currentImageIndex].caption}</p>
               </div>
             </div>
           </div>
@@ -184,7 +262,7 @@ const ItineraryPackage = () => {
 
           {/* Image Indicators */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            {packageImages.map((_, index) => (
+            {currentPackageImages.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
@@ -198,7 +276,7 @@ const ItineraryPackage = () => {
 
         {/* Thumbnail Gallery - Hide on small screens, show on medium and up */}
         <div className="hidden md:grid grid-cols-5 gap-4 mb-8">
-          {packageImages.map((image, index) => (
+          {currentPackageImages.map((image, index) => (
             <button
               key={index}
               onClick={() => setCurrentImageIndex(index)}
@@ -229,9 +307,9 @@ const ItineraryPackage = () => {
               <div className="flex-1">
                 {/* Title Section */}
                 <div className="flex items-center gap-3 mb-4 md:mb-8">
-                  <h2 className="text-2xl font-bold text-gray-900">Dubai</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">{packageTitle}</h2>
                   <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-sm">
-                    4N/5D
+                    {packageDuration}
                   </span>
                 </div>
 
@@ -297,7 +375,9 @@ const ItineraryPackage = () => {
               <div className="mt-6 md:mt-0 md:text-right md:pl-8 border-t pt-4 md:pt-0 md:border-t-0 border-gray-100">
                 <p className="text-gray-600 text-sm mb-1">Book now at</p>
                 <div className="mb-1">
-                  <span className="text-3xl md:text-4xl font-bold text-gray-900">$499</span>
+                  <span className="text-3xl md:text-4xl font-bold text-gray-900">
+                    <Price amount={packagePrice} />
+                  </span>
                 </div>
                 <p className="text-sm text-gray-500 mb-4">Excl. Tax Per Person</p>
                 
@@ -591,8 +671,8 @@ const ItineraryPackage = () => {
                       <FaMapMarkerAlt />
                     </div>
                     <div>
-                      <h4 className="font-medium text-sm">Dubai Experience</h4>
-                      <p className="text-xs text-gray-500">4N/5D • from $499</p>
+                      <h4 className="font-medium text-sm">{packageTitle}</h4>
+                      <p className="text-xs text-gray-500">{packageDuration} • from <Price amount={packagePrice} /></p>
                     </div>
                   </div>
                   <div className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">

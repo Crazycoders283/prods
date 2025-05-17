@@ -1,5 +1,5 @@
 import { Search, Calendar, ChevronDown, MapPin, Users, Star, ArrowRight, DollarSign, Tag, Heart, Plane, Sunrise, Coffee, X, Clock, Sparkles } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import packagesData from '../../../data/packages.json'
 import { Link } from "react-router-dom"
 import Navbar from '../Navbar'
@@ -16,6 +16,8 @@ const TravelPackages = () => {
   const [showSearchPage, setShowSearchPage] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const searchRef = useRef(null)
 
   useEffect(() => {
     const handleResize = () => {
@@ -23,7 +25,20 @@ const TravelPackages = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    // Handle clicks outside of search suggestions
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   // Combine all packages into one array for search
@@ -57,6 +72,22 @@ const TravelPackages = () => {
     }))
   ]
 
+  // Extract available destinations and locations for auto-suggestion
+  const availableDestinations = [
+    { type: 'destination', value: 'dubai', label: 'Dubai' },
+    { type: 'destination', value: 'europe', label: 'Europe' },
+    { type: 'destination', value: 'kashmir', label: 'Kashmir' },
+    { type: 'destination', value: 'northEast', label: 'North East' }
+  ];
+  
+  // Extract unique locations from all packages
+  const availableLocations = [...new Set(allPackages.map(pkg => pkg.location))]
+    .filter(location => location) // Filter out undefined/null
+    .map(location => ({ type: 'location', value: location, label: location }));
+  
+  // Combine destinations and locations for search suggestions
+  const allSuggestions = [...availableDestinations, ...availableLocations];
+
   const packageTypes = ["All Inclusive", "Flight + Hotel", "Activities Only", "Cruise Package"]
 
   const toggleLike = (packageId) => {
@@ -70,17 +101,39 @@ const TravelPackages = () => {
   const handleSearch = (e) => {
     e.preventDefault()
     setShowSearchPage(true)
+    setShowSuggestions(false)
   }
+  
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
+    setShowSuggestions(true);
+  };
+  
+  const handleSuggestionClick = (suggestion) => {
+    setSearchQuery(suggestion.label);
+    setShowSuggestions(false);
+    
+    // If it's a destination, filter by that destination
+    if (suggestion.type === 'destination') {
+      // Optional: Additional logic to filter by destination
+    }
+  };
+  
+  // Filter suggestions based on input
+  const filteredSuggestions = allSuggestions.filter(suggestion => 
+    suggestion.label.toLowerCase().includes(searchQuery.toLowerCase())
+  ).slice(0, 5); // Limit to 5 suggestions
 
   // Filter packages based on search query and package type
   const filteredPackages = allPackages.filter(pkg => {
     const matchesSearch = !searchQuery || 
       pkg.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (pkg.location && pkg.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      pkg.destination.toLowerCase() === searchQuery.toLowerCase() ||
       pkg.features.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesType = selectedPackageType === "All Inclusive" || 
-      pkg.features.includes(selectedPackageType)
+      pkg.packageType === selectedPackageType
 
     return matchesSearch && matchesType
   })
@@ -158,10 +211,10 @@ const TravelPackages = () => {
           <div>
             <div className="text-xs text-gray-500">Starting from</div>
             <span className="text-2xl font-bold text-blue-600">
-              <Price amount={pkg.price.replace(/[^0-9.]/g, '')} />
+              <Price amount={typeof pkg.price === 'string' ? pkg.price.replace(/[^0-9.]/g, '') : pkg.price} />
             </span>
           </div>
-          <Link to={`/search-packages?destination=${pkg.destination}&duration=${pkg.duration}&price=${pkg.price}`} 
+          <Link to={`/packages/itinerary?destination=${pkg.destination}`} 
             className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-colors">
             View Details
           </Link>
@@ -187,15 +240,45 @@ const TravelPackages = () => {
           <div className="container mx-auto px-4 py-4">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
               {/* Search Input */}
-              <div className="relative flex-1 w-full">
+              <div className="relative flex-1 w-full" ref={searchRef}>
                 <input
                   type="text"
                   placeholder="Search destinations, packages, or activities..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchInputChange}
+                  onFocus={() => setShowSuggestions(true)}
                   className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                
+                {/* Search Suggestions */}
+                {showSuggestions && searchQuery.length > 0 && filteredSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50 max-h-60 overflow-y-auto">
+                    {filteredSuggestions.map((suggestion, index) => (
+                      <div
+                        key={`${suggestion.type}-${index}`}
+                        className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion.type === 'destination' ? (
+                          <Plane size={16} className="text-blue-500 mr-2" />
+                        ) : (
+                          <MapPin size={16} className="text-red-500 mr-2" />
+                        )}
+                        <span>{suggestion.label}</span>
+                        <span className="ml-2 text-xs text-gray-500">
+                          {suggestion.type === 'destination' ? 'Destination' : 'Location'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {showSuggestions && searchQuery.length > 0 && filteredSuggestions.length === 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50 p-4 text-center text-gray-500">
+                    No matching destinations found
+                  </div>
+                )}
               </div>
 
               {/* Package Type Filter */}
@@ -301,15 +384,42 @@ const TravelPackages = () => {
               <div className="flex flex-col gap-6">
                 <div className="w-full">
                   <label className="block text-gray-800 text-base font-medium mb-2">Destination</label>
-                  <div className="relative">
+                  <div className="relative" ref={searchRef}>
                     <input
                       type="text"
                       placeholder="Where do you want to go?"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearchInputChange}
+                      onFocus={() => setShowSuggestions(true)}
                       className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
                     />
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={20} />
+                    
+                    {/* Search Suggestions */}
+                    {showSuggestions && searchQuery.length > 0 && filteredSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50 max-h-60 overflow-y-auto">
+                        {filteredSuggestions.map((suggestion, index) => (
+                          <div
+                            key={`mobile-${suggestion.type}-${index}`}
+                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                          >
+                            {suggestion.type === 'destination' ? (
+                              <Plane size={16} className="text-blue-500 mr-2" />
+                            ) : (
+                              <MapPin size={16} className="text-red-500 mr-2" />
+                            )}
+                            <span>{suggestion.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {showSuggestions && searchQuery.length > 0 && filteredSuggestions.length === 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50 p-4 text-center text-gray-500">
+                        No matching destinations found
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -383,20 +493,50 @@ const TravelPackages = () => {
               </div>
             </form>
 
-            {/* Desktop Form - Original layout preserved */}
+            {/* Desktop Form - Original layout preserved with enhancements */}
             <form onSubmit={handleSearch} className="hidden md:block bg-white/95 backdrop-blur-sm rounded-xl p-8 max-w-5xl mx-auto shadow-2xl transform hover:scale-[1.02] transition-all duration-300">
               <div className="flex flex-row gap-6">
-                <div className="flex-1">
+                <div className="flex-1" ref={searchRef}>
                   <label className="block text-gray-700 text-sm font-medium mb-1">Destination</label>
                   <div className="relative">
                     <input
                       type="text"
                       placeholder="Where do you want to go?"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={handleSearchInputChange}
+                      onFocus={() => setShowSuggestions(true)}
                       className="w-full p-3 pl-10 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base"
                     />
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    
+                    {/* Search Suggestions */}
+                    {showSuggestions && searchQuery.length > 0 && filteredSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border z-50 max-h-60 overflow-y-auto">
+                        {filteredSuggestions.map((suggestion, index) => (
+                          <div
+                            key={`desktop-${suggestion.type}-${index}`}
+                            className="px-4 py-3 hover:bg-blue-50 cursor-pointer flex items-center"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                          >
+                            {suggestion.type === 'destination' ? (
+                              <Plane size={16} className="text-blue-500 mr-2" />
+                            ) : (
+                              <MapPin size={16} className="text-red-500 mr-2" />
+                            )}
+                            <span>{suggestion.label}</span>
+                            <span className="ml-2 text-xs text-gray-500">
+                              {suggestion.type === 'destination' ? 'Destination' : 'Location'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {showSuggestions && searchQuery.length > 0 && filteredSuggestions.length === 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border z-50 p-4 text-center text-gray-500">
+                        No matching destinations found
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -599,13 +739,14 @@ const TravelPackages = () => {
                     <div>
                       <p className="text-gray-500 text-sm">Starting from</p>
                       <div className="flex items-center gap-1">
-                        <DollarSign size={18} className="text-blue-600" />
-                        <span className="text-2xl font-bold text-blue-600">{item.price}</span>
+                        <span className="text-2xl font-bold text-blue-600">
+                          <Price amount={typeof item.price === 'string' ? item.price.replace(/[^0-9.]/g, '') : item.price} />
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Link 
-                        to="/packages/itinerary" 
+                        to={`/packages/itinerary?destination=${item.destination}`}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 flex items-center gap-1 text-sm font-medium group"
                       >
                         View Itinerary
@@ -632,7 +773,11 @@ const TravelPackages = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-6">
             {packagesData.europe.packages.map((item) => (
-              <div key={item.id} className="rounded-xl overflow-hidden shadow-lg group cursor-pointer bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300">
+              <Link 
+                key={item.id} 
+                to={`/packages/itinerary?destination=${item.destination}`}
+                className="rounded-xl overflow-hidden shadow-lg group cursor-pointer bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-all duration-300"
+              >
                 <div className="relative h-48">
                   <img
                     src={item.image}
@@ -647,14 +792,15 @@ const TravelPackages = () => {
                         <Clock size={14} />
                         <span className="text-sm">{item.duration}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign size={14} />
-                        <span className="text-sm">{item.price}</span>
+                      <div className="flex items-center gap-1 text-white/90">
+                        <span className="text-sm">
+                          <Price amount={typeof item.price === 'string' ? item.price.replace(/[^0-9.]/g, '') : item.price} />
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -671,7 +817,11 @@ const TravelPackages = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {packagesData.kashmir.packages.map((item) => (
-              <div key={item.id} className="rounded-lg overflow-hidden shadow-md group">
+              <Link 
+                key={item.id} 
+                to={`/packages/itinerary?destination=${item.destination}`}
+                className="rounded-lg overflow-hidden shadow-md group"
+              >
                 <div className="relative h-48">
                   <img
                     src={item.image}
@@ -687,13 +837,14 @@ const TravelPackages = () => {
                         <span className="text-sm">{item.duration}</span>
                       </div>
                       <div className="flex items-center gap-1 text-white/90">
-                        <DollarSign size={14} />
-                        <span className="text-sm">{item.price}</span>
+                        <span className="text-sm">
+                          <Price amount={typeof item.price === 'string' ? item.price.replace(/[^0-9.]/g, '') : item.price} />
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -710,7 +861,11 @@ const TravelPackages = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {packagesData.northEast.packages.map((item) => (
-              <div key={item.id} className="rounded-xl overflow-hidden shadow-lg group">
+              <Link 
+                key={item.id} 
+                to={`/packages/itinerary?destination=${item.destination}`}
+                className="rounded-xl overflow-hidden shadow-lg group"
+              >
                 <div className="relative h-64">
                   <img
                     src={item.image}
@@ -727,13 +882,14 @@ const TravelPackages = () => {
                         <span className="text-sm">{item.duration}</span>
                       </div>
                       <div className="flex items-center gap-1 text-white/90">
-                        <DollarSign size={14} />
-                        <span className="text-sm">${item.price}</span>
+                        <span className="text-sm">
+                          <Price amount={typeof item.price === 'string' ? item.price.replace(/[^0-9.]/g, '') : item.price} />
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
