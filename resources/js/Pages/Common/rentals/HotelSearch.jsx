@@ -7,10 +7,8 @@ import axios from 'axios';
 import { popularDestinations } from './hotel';
 import * as amadeusUtils from './amadeusUtils';
 
-// Direct API credentials and URLs (these will be used as fallbacks)
-const AMADEUS_API_KEY = 'ZsgV43XBz0GbNk85zQuzvWnhARwXX4IE';
-const AMADEUS_API_SECRET = '2uFgpTVo5GA4ytwq';
-const API_URL = 'https://jet-set-go-psi.vercel.app/api';
+// Use environment variables instead of hardcoded credentials
+const API_URL = import.meta.env.VITE_API_URL || 'https://jet-set-go-psi.vercel.app/api';
 
 const HotelSearch = () => {
   const navigate = useNavigate();

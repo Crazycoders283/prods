@@ -25,9 +25,9 @@ dotenv.config();
 
 const getAccessToken = async () => {
   try {
-    // Try environment variables first, then fall back to hardcoded credentials
-    const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY || 'ZsgV43XBz0GbNk85zQuzvWnhARwXX4IE';
-    const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET || '2uFgpTVo5GA4ytwq';
+    // Only use environment variables, no hardcoded fallbacks
+    const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY;
+    const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET;
     
     console.log('Attempting to get Amadeus token with credentials:', {
       apiKeyExists: !!apiKey,
