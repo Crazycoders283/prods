@@ -98,7 +98,7 @@ const HotelSearch = () => {
           timestamp: new Date().toISOString()
         }));
 
-        navigate('/hotels/results', { 
+        navigate('/hotel-search-results', { 
           state: { 
             searchResults: response.data.data,
             searchParams: searchParams 

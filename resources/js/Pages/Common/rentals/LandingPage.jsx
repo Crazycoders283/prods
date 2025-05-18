@@ -259,6 +259,25 @@ export default function LandingPage() {
         console.log('Found empty hotels array, creating placeholder hotels instead');
         hotelsData = generatePlaceholderHotels(cityCode, 5);
       }
+      
+      // Process hotels to ensure all required fields are present
+      hotelsData = hotelsData.map((hotel, index) => {
+        // Add unique ID if missing
+        if (!hotel.id) {
+          hotel.id = `hotel-${cityCode}-${index}-${Date.now()}`;
+        }
+        
+        // Add hotel name if missing
+        if (!hotel.name) {
+          const cityInfo = popularDestinations.find(dest => dest.code === cityCode) || {
+            name: cityCode,
+            country: 'Unknown'
+          };
+          hotel.name = `${cityInfo.name} ${['Grand Hotel', 'Plaza Resort', 'Luxury Suites', 'Executive Inn', 'Palace Hotel'][index % 5]}`;
+        }
+        
+        return hotel;
+      });
 
       if (hotelsData.length > 0) {
         // Format hotels to ensure they have all required fields
@@ -285,7 +304,8 @@ export default function LandingPage() {
           return hotel;
         });
 
-        navigate('/hotels/results', {
+        // Navigate to the HotelSearchResults component using the correct route path
+      navigate('/hotel-search-results', {
           state: {
             searchResults: formattedHotels,
             searchParams: {
