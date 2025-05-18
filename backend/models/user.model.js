@@ -91,29 +91,37 @@ class User {
     try {
       console.log('Finding user by email:', email);
       
+      // Remove .single() to avoid error when no user found
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', email)
-        .single();
+        .eq('email', email);
 
       if (error) {
         console.error('Supabase error during findByEmail:', error);
         throw error;
       }
       
-      console.log('Found user:', data);
-      
-      if (data) {
+      // If we have data and at least one user record
+      if (data && data.length > 0) {
+        console.log('Found user:', data[0]);
+        
         return {
-          ...data,
-          firstName: data.first_name,
-          lastName: data.last_name
+          ...data[0],
+          firstName: data[0].first_name,
+          lastName: data[0].last_name
         };
       }
+      
+      console.log('No user found with email:', email);
       return null;
     } catch (error) {
       console.error('Error in User.findByEmail:', error);
+      // Return null instead of throwing error when not found
+      if (error.code === 'PGRST116') {
+        console.log('No user found with email (caught error):', email);
+        return null;
+      }
       throw error;
     }
   }
