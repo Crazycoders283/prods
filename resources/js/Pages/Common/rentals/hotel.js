@@ -128,7 +128,7 @@ export const popularDestinations = [
     id: 5,
     name: "Dubai",
     code: "DXB",
-    country: "UAE",
+    country: "United Arab Emirates",
     image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c",
     description: "Luxury in the Desert",
     rating: 4.9,
@@ -152,16 +152,57 @@ export const popularDestinations = [
     image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd",
     description: "Garden City of Asia",
     rating: 4.8,
-    reviews: 950,
-    popular: false
+    reviews: 950
   },
   {
     id: 8,
-    name: "Cashville",
-    location: "Ampara, Sri Lanka",
-    image: "https://images.unsplash.com/photo-1590073242678-70ee3fc28f8a?q=80&w=2121&auto=format&fit=crop",
-    hotelCount: 30,
-    popular: true
+    name: "Barcelona",
+    code: "BCN",
+    country: "Spain",
+    image: "https://images.unsplash.com/photo-1539037116277-4db20889f2d4",
+    description: "Gaudi's Masterpiece",
+    rating: 4.7,
+    reviews: 850
+  },
+  {
+    id: 9,
+    name: "Amsterdam",
+    code: "AMS",
+    country: "Netherlands",
+    image: "https://images.unsplash.com/photo-1576924542622-772579fe5fbb",
+    description: "City of Canals",
+    rating: 4.6,
+    reviews: 780
+  },
+  {
+    id: 10,
+    name: "Hong Kong",
+    code: "HKG",
+    country: "China",
+    image: "https://images.unsplash.com/photo-1508002366005-75a695ee2d17",
+    description: "East Meets West",
+    rating: 4.7,
+    reviews: 920
+  },
+  {
+    id: 11,
+    name: "Berlin",
+    code: "BER",
+    country: "Germany",
+    image: "https://images.unsplash.com/photo-1528728329032-2972f65dfb3f",
+    description: "Historic and Modern",
+    rating: 4.5,
+    reviews: 720
+  },
+  {
+    id: 12,
+    name: "Istanbul",
+    code: "IST",
+    country: "Turkey",
+    image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200",
+    description: "Where Continents Meet",
+    rating: 4.6,
+    reviews: 680
   }
 ];
 

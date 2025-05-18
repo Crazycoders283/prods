@@ -4,7 +4,7 @@ import { Star, MapPin, Wifi, Coffee, Tv, Users, Heart, ArrowLeft, Search, X, Glo
 import Navbar from '../Navbar';
 import Footer from '../Footer';
 import axios from 'axios';
-import apiConfig from '../../../../../src/config/api.js';
+import * as amadeusUtils from './amadeusUtils';
 
 export default function HotelSearchResults() {
   const location = useLocation();
@@ -19,10 +19,16 @@ export default function HotelSearchResults() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [favorites, setFavorites] = useState({});
+  const [totalHotels, setTotalHotels] = useState(0);
   
   // Search states
   const [searchDestination, setSearchDestination] = useState(searchParams.cityCode || "");
-  const [searchDates, setSearchDates] = useState("Select dates");
+  const [searchDates, setSearchDates] = useState(() => {
+    if (searchParams.checkInDate && searchParams.checkOutDate) {
+      return amadeusUtils.formatDateRange(searchParams.checkInDate, searchParams.checkOutDate);
+    }
+    return "Select dates";
+  });
   const [searchTravelers, setSearchTravelers] = useState(searchParams.adults || 2);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
@@ -32,8 +38,8 @@ export default function HotelSearchResults() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [selectedStartDate, setSelectedStartDate] = useState(null);
-  const [selectedEndDate, setSelectedEndDate] = useState(null);
+  const [selectedStartDate, setSelectedStartDate] = useState(searchParams.checkInDate ? new Date(searchParams.checkInDate) : null);
+  const [selectedEndDate, setSelectedEndDate] = useState(searchParams.checkOutDate ? new Date(searchParams.checkOutDate) : null);
   const [hoverDate, setHoverDate] = useState(null);
   const datePickerRef = useRef(null);
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -48,12 +54,8 @@ export default function HotelSearchResults() {
   useEffect(() => {
     const fetchDestinations = async () => {
       try {
-        // Use direct URL instead of dynamic construction
-        const destinationsUrl = 'https://jet-set-go-psi.vercel.app/api/hotels/destinations';
-        
-        console.log('Fetching destinations from:', destinationsUrl);
-        
-        const response = await axios.get(destinationsUrl, {
+        const apiUrl = 'https://jet-set-go-psi.vercel.app/api'; 
+        const response = await axios.get(`${apiUrl}/hotels/destinations`, {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
@@ -69,39 +71,20 @@ export default function HotelSearchResults() {
     fetchDestinations();
   }, []);
 
-  // Update formatDate function to ensure YYYY-MM-DD format for API requests
-  const formatDate = (date) => {
-    if (!date) return '';
-    try {
-      const d = new Date(date);
-      if (isNaN(d.getTime())) {
-        throw new Error('Invalid date');
-      }
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`; // Returns YYYY-MM-DD format
-    } catch (e) {
-      console.error('Date formatting error:', e);
-      throw new Error('Invalid date format');
-    }
-  };
-
   // Handle search submission
   const handleSearch = async () => {
-    if (!searchDestination || !cityCode || cityCode.trim() === '') {
-      setSearchError("Please select a valid destination");
-      return;
-    }
-
-    if (!selectedStartDate || !selectedEndDate) {
-      setSearchError("Please select both check-in and check-out dates");
-      return;
-    }
-
-    // Validate date range
-    if (selectedEndDate <= selectedStartDate) {
-      setSearchError("Check-out date must be after check-in date");
+    // Validate inputs
+    const params = {
+      cityCode: cityCode,
+      checkInDate: selectedStartDate ? amadeusUtils.formatDate(selectedStartDate) : null,
+      checkOutDate: selectedEndDate ? amadeusUtils.formatDate(selectedEndDate) : null,
+      adults: searchTravelers
+    };
+    
+    // Validate search parameters
+    const validation = amadeusUtils.validateSearchParams(params);
+    if (!validation.isValid) {
+      setSearchError(validation.errors[0]);
       return;
     }
 
@@ -109,132 +92,69 @@ export default function HotelSearchResults() {
     setSearchError(null);
 
     try {
-      // Format dates properly for API - ensure YYYY-MM-DD format
-      const formattedStartDate = formatDate(selectedStartDate);
-      const formattedEndDate = formatDate(selectedEndDate);
-
-      // Use direct URL instead of dynamic construction
-      const apiUrl = 'https://jet-set-go-psi.vercel.app/api/hotels/search';
-
-      console.log('API URL:', apiUrl);
-      console.log('Search Parameters:', {
-        destination: cityCode,
-        checkInDate: formattedStartDate,
-        checkOutDate: formattedEndDate,
-        travelers: searchTravelers
+      console.log('Searching with params:', params);
+      
+      // Use direct API URL
+      const apiUrl = 'https://jet-set-go-psi.vercel.app/api';
+      
+      console.log('Using API URL:', apiUrl);
+      
+      const response = await axios.get(`${apiUrl}/hotels/search`, {
+        params: {
+          destination: params.cityCode,
+          checkInDate: params.checkInDate,
+          checkOutDate: params.checkOutDate,
+          travelers: params.adults,
+          // Additional parameters that were validated in tests
+          radius: 50,
+          radiusUnit: 'KM',
+          hotelSource: 'ALL'
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       });
 
-      try {
-        const response = await axios.get(apiUrl, {
-          params: {
-            destination: cityCode,
-            checkInDate: formattedStartDate,
-            checkOutDate: formattedEndDate,
-            travelers: searchTravelers
-          },
-          timeout: 10000 // 10 second timeout
-        });
-
-        if (response.data.success) {
-          const hotelsData = response.data.data?.data || [];
-          const formattedResults = hotelsData.map(hotel => ({
-            id: hotel.hotelId || Math.random().toString(36).substr(2, 9),
-            name: hotel.name || 'Hotel Name Not Available',
-            location: hotel.address?.cityName || `${hotel.address?.countryCode || 'US'}`,
-            price: '150', // Default price
-            rating: hotel.rating || ((Math.random() * 2 + 3).toFixed(1)),
-            image: hotel.media?.images?.[0]?.uri || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-            amenities: hotel.amenities || ['WiFi', 'Room Service', 'Restaurant']
-          }));
-
-          setSearchResults(formattedResults);
-          setFilteredHotels(formattedResults);
-          setSearchParams({
-            cityCode,
-            checkInDate: formattedStartDate,
-            checkOutDate: formattedEndDate,
-            adults: searchTravelers
-          });
+      // Process response
+      if (response.data.success) {
+        const hotels = response.data.data?.hotels || [];
+        
+        console.log(`Found ${hotels.length} hotels in search results`);
+        
+        // Even if we got 0 hotels, process the response normally
+        setSearchResults(hotels);
+        setFilteredHotels(hotels);
+        setTotalHotels(hotels.length);
+        setIsSearching(false);
+        
+        // Reset filters when new search is performed
+        setPriceRange([0, 10000]);
+        setSelectedRating(0);
+        setSelectedAmenities([]);
+        
+        // If no hotels found, show a friendly message
+        if (hotels.length === 0) {
+          setSearchError('No hotels found for your search criteria. Try changing your dates or destination.');
         } else {
-          // Generate mock data if API returns no success
-          const mockHotels = generateMockHotels(cityCode, 10);
-          setSearchResults(mockHotels);
-          setFilteredHotels(mockHotels);
-          setSearchParams({
-            cityCode,
-            checkInDate: formattedStartDate,
-            checkOutDate: formattedEndDate,
-            adults: searchTravelers
-          });
+          // Sort hotels by price (default)
+          const sortedHotels = [...hotels].sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+          setSearchResults(sortedHotels);
+          setFilteredHotels(sortedHotels);
         }
-             } catch (apiError) {
-         console.error('API request failed:', apiError);
-         
-         // Check for specific error about destination
-         if (apiError.response?.data?.message?.includes("Destination is required")) {
-           setSearchError("Please select a valid destination");
-           setIsSearching(false);
-           return;
-         }
-         
-         // Generate mock data on API failure
-         const mockHotels = generateMockHotels(cityCode, 10);
-         setSearchResults(mockHotels);
-         setFilteredHotels(mockHotels);
-         setSearchParams({
-           cityCode,
-           checkInDate: formattedStartDate,
-           checkOutDate: formattedEndDate,
-           adults: searchTravelers
-         });
+      } else {
+        setSearchError(response.data.message || 'No hotels found for these search criteria');
+        setIsSearching(false);
       }
-    } catch (error) {
-      console.error('Error searching hotels:', error);
-      setError(error.response?.data?.message || "Error searching hotels");
-    } finally {
+    } catch (err) {
+      console.error('Search error:', err);
+      if (err.response?.status === 429) {
+        setSearchError('Too many requests. Please try again later.');
+      } else {
+        setSearchError(err.response?.data?.message || 'An error occurred while searching. Please try again.');
+      }
       setIsSearching(false);
     }
-  };
-
-  // Generate mock hotels when API fails
-  const generateMockHotels = (cityCode, count) => {
-    // Sample hotel names for generated results
-    const hotelNames = [
-      "Grand Plaza Hotel",
-      "Luxury Heights Resort",
-      "Oceanview Suites",
-      "Metropolitan Grand",
-      "Royal Palms Inn",
-      "Sunset Bay Resort",
-      "Elite Central Hotel",
-      "Park Avenue Hotel",
-      "Garden Court Hotel",
-      "City Lights Hotel"
-    ];
-    
-    // Get destination name from cityCode or use a fallback
-    const destination = destinationSuggestions.find(d => d.code === cityCode) || 
-      { name: cityCode || 'Unknown', country: 'Location', code: cityCode };
-    
-    const results = [];
-    for (let i = 0; i < count; i++) {
-      const randomPrice = (Math.random() * 400 + 100).toFixed(2);
-      const randomRating = (3 + Math.random() * 2).toFixed(1);
-      
-      results.push({
-        id: `mock-${i}-${Math.random().toString(36).substr(2, 5)}`,
-        name: hotelNames[i % hotelNames.length],
-        location: `${destination.name}, ${destination.country}`,
-        price: randomPrice,
-        rating: randomRating,
-        image: `https://source.unsplash.com/random/300x200/?hotel,${destination.name},${i}`,
-        amenities: ['WiFi', 'Room Service', 'Restaurant', 'Pool', 'Gym'],
-        code: cityCode,
-        isMock: true
-      });
-    }
-    
-    return results;
   };
 
   // Handle destination input
@@ -242,7 +162,8 @@ export default function HotelSearchResults() {
     setSearchDestination(value);
     if (value.length > 0) {
       const filtered = destinationSuggestions.filter(dest => 
-        dest.toLowerCase().includes(value.toLowerCase())
+        dest.name.toLowerCase().includes(value.toLowerCase()) || 
+        (dest.country && dest.country.toLowerCase().includes(value.toLowerCase()))
       );
       setFilteredSuggestions(filtered);
       setShowDestinationSuggestions(filtered.length > 0);
@@ -260,21 +181,10 @@ export default function HotelSearchResults() {
 
   // Update date range display
   const updateDateRange = (startDate, endDate) => {
-    if (!startDate) {
-      setSearchDates('Select dates');
-      return;
-    }
-
-    const formattedStartDate = formatDisplayDate(startDate);
-
-    if (!endDate) {
-      setSearchDates(`${formattedStartDate} - Select checkout`);
-      return;
-    }
-
-    const formattedEndDate = formatDisplayDate(endDate);
-
-    setSearchDates(`${formattedStartDate} - ${formattedEndDate}`);
+    setSearchDates(amadeusUtils.formatDateRange(
+      startDate ? amadeusUtils.formatDate(startDate) : null, 
+      endDate ? amadeusUtils.formatDate(endDate) : null
+    ));
   };
 
   // Fetch search results if not available in location state
@@ -284,132 +194,231 @@ export default function HotelSearchResults() {
         setIsLoading(true);
         setError(null);
         try {
-          // Format dates properly for API - ensure YYYY-MM-DD format
-          const formattedCheckInDate = formatDate(searchParams.checkInDate);
-          const formattedCheckOutDate = formatDate(searchParams.checkOutDate);
-
-          // Use direct URL instead of dynamic construction
-          const apiUrl = 'https://jet-set-go-psi.vercel.app/api/hotels/search';
+          console.log('Fetching hotels for:', searchParams);
           
-          console.log('Fetching search results with params:', {
-            destination: searchParams.cityCode,
-            checkInDate: formattedCheckInDate,
-            checkOutDate: formattedCheckOutDate,
-            travelers: searchParams.adults
-          });
-
+          // Use direct API URL
+          const apiUrl = 'https://jet-set-go-psi.vercel.app/api';
+          
+          console.log('Using API URL:', apiUrl);
+          
           try {
-            const response = await axios.get(apiUrl, {
+            // First try the regular search API
+            const response = await axios.get(`${apiUrl}/hotels/search`, {
               params: {
                 destination: searchParams.cityCode,
-                checkInDate: formattedCheckInDate,
-                checkOutDate: formattedCheckOutDate,
-                travelers: searchParams.adults
+                checkInDate: searchParams.checkInDate,
+                checkOutDate: searchParams.checkOutDate,
+                travelers: searchParams.adults,
+                // Additional parameters for better results
+                radius: 50,
+                radiusUnit: 'KM',
+                hotelSource: 'ALL'
               },
-              timeout: 10000 // 10 second timeout
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
             });
 
-            if (response.data.success) {
-              // Access the nested data array
-              const hotelsData = response.data.data?.data || [];
-              console.log('Raw Hotels Data:', hotelsData);
-              
-              const formattedResults = hotelsData.map(hotel => {
-                // Extract price from the API response
-                let hotelPrice = '0';
-                let hotelName = 'Hotel Not Available';
-                
-                // Try to get price from different possible locations in the response
-                if (hotel.offers && hotel.offers.length > 0) {
-                  const offer = hotel.offers[0];
-                  if (offer.price) {
-                    hotelPrice = offer.price.total || offer.price.base || offer.price;
-                  }
-                  
-                  // Try to get hotel name from offer details
-                  if (offer.hotel && offer.hotel.name) {
-                    hotelName = offer.hotel.name;
-                  }
-                } else if (hotel.price) {
-                  hotelPrice = typeof hotel.price === 'object' ? hotel.price.total || hotel.price.base : hotel.price;
-                } else if (hotel.rates && hotel.rates.length > 0) {
-                  const rate = hotel.rates[0];
-                  hotelPrice = rate.total || rate.base || rate.price;
+            processApiResponse(response);
+          } catch (apiError) {
+            console.error('Regular API error, trying mock API:', apiError);
+            
+            // Try the mock API as fallback
+            try {
+              const mockResponse = await axios.get(`${apiUrl}/hotels/mock-search`, {
+                params: {
+                  destination: searchParams.cityCode,
+                  checkInDate: searchParams.checkInDate,
+                  checkOutDate: searchParams.checkOutDate,
+                  travelers: searchParams.adults
+                },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
                 }
-
-                // If no price found, generate a random price between 100 and 500
-                if (hotelPrice === '0' || hotelPrice === 0) {
-                  hotelPrice = (Math.random() * 400 + 100).toFixed(2);
-                }
-
-                // Check more potential locations for hotel name
-                if (!hotelName || hotelName === 'Hotel Not Available') {
-                  if (hotel.name) {
-                    hotelName = hotel.name;
-                  } else if (hotel.hotel && hotel.hotel.name) {
-                    hotelName = hotel.hotel.name;
-                  } else if (hotel.property && hotel.property.name) {
-                    hotelName = hotel.property.name;
-                  }
-                }
-
-                // Try to extract city name from address if available
-                const cityName = hotel.address?.cityName || hotel.city || searchDestination;
-
-                // Ensure price is a valid number and format it
-                const numericPrice = parseFloat(hotelPrice);
-                hotelPrice = isNaN(numericPrice) ? '0' : numericPrice.toFixed(2);
-
-                return {
-                  id: hotel.hotelId || hotel.id || Math.random().toString(36).substr(2, 9),
-                  name: hotelName,
-                  location: cityName || searchParams.cityCode,
-                  price: hotelPrice,
-                  rating: hotel.rating || ((Math.random() * 2 + 3).toFixed(1)), // Random rating between 3.0 and 5.0
-                  image: hotel.media?.images?.[0]?.uri || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-                  amenities: hotel.amenities || ['WiFi', 'Room Service', 'Restaurant']
-                };
               });
               
-              console.log('Formatted Results with Prices:', formattedResults);
-              setSearchResults(formattedResults);
-              setFilteredHotels(formattedResults);
-            } else {
-              // Generate mock data if API returns success: false
-              console.log('API returned no success, using mock data');
-              const mockHotels = generateMockHotels(searchParams.cityCode, 10);
-              setSearchResults(mockHotels);
-              setFilteredHotels(mockHotels);
+              processApiResponse(mockResponse);
+            } catch (mockError) {
+              console.error('Mock API also failed:', mockError);
+              setError('Failed to load hotels. Please try again later.');
+              setIsLoading(false);
             }
-                     } catch (apiError) {
-             console.error('API request failed:', apiError);
-             
-             // Check for specific error about destination
-             if (apiError.response?.data?.message?.includes("Destination is required")) {
-               setError("Please select a valid destination");
-               setIsLoading(false);
-               return;
-             }
-             
-             // Generate mock data on API failure
-             console.log('API call failed, using mock data');
-             const mockHotels = generateMockHotels(searchParams.cityCode, 10);
-             setSearchResults(mockHotels);
-             setFilteredHotels(mockHotels);
           }
-        } catch (dateError) {
-          console.error('Date formatting error:', dateError);
-          setError('Invalid date format. Please try searching again.');
-        } finally {
+        } catch (error) {
+          console.error('Error fetching hotels:', error);
+          setError(error.response?.data?.message || 'Failed to load hotels. Please try again later.');
+          setIsLoading(false);
+        }
+      } else if (searchResults.length) {
+        // Process existing search results to ensure all required fields are present
+        processExistingResults();
+      }
+    };
+
+    // Process API response
+    const processApiResponse = (response) => {
+      console.log('API Response:', response.data);
+      console.log('API Response structure:', JSON.stringify(response.data, null, 2));
+
+      if (response.data.success) {
+        // Try to extract hotels from different possible response structures
+        let hotelsData = [];
+        
+        // Case 1: response.data.data.hotels exists
+        if (response.data.data?.hotels && Array.isArray(response.data.data.hotels)) {
+          hotelsData = response.data.data.hotels;
+          console.log('Found hotels in response.data.data.hotels:', hotelsData.length);
+        } 
+        // Case 2: response.data.data exists and is an array
+        else if (response.data.data?.data && Array.isArray(response.data.data.data)) {
+          hotelsData = response.data.data.data;
+          console.log('Found hotels in response.data.data.data:', hotelsData.length);
+        }
+        // Case 3: response.data.data exists directly
+        else if (response.data.data && Array.isArray(response.data.data)) {
+          hotelsData = response.data.data;
+          console.log('Found hotels in response.data.data:', hotelsData.length);
+        } else {
+          console.log('No hotels array found in response, using placeholders');
+          hotelsData = [];
+        }
+        
+        if (hotelsData.length > 0) {
+          // Format each hotel to ensure it has required fields
+          const formattedHotels = hotelsData.map(hotel => {
+            // Ensure location field is set
+            if (!hotel.location) {
+              const cityName = hotel.address?.cityName || searchParams.cityCode;
+              const countryCode = hotel.address?.countryCode || '';
+              hotel.location = countryCode ? `${cityName}, ${countryCode}` : cityName;
+            }
+            
+            // Ensure image exists
+            if (!hotel.image && hotel.images && hotel.images.length > 0) {
+              hotel.image = hotel.images[0];
+            } else if (!hotel.image) {
+              hotel.image = `https://source.unsplash.com/random/300x200/?hotel,${hotel.id || Math.random()}`;
+            }
+            
+            // Ensure amenities is an array
+            if (!hotel.amenities || !Array.isArray(hotel.amenities) || hotel.amenities.length === 0) {
+              hotel.amenities = ['Free WiFi', 'Air Conditioning', 'Pool'].slice(0, 3);
+            }
+            
+            // Ensure rating is a number between 1-5
+            if (!hotel.rating) {
+              hotel.rating = (Math.random() * 1 + 4).toFixed(1); // Random between 4-5
+            }
+            
+            return hotel;
+          });
+          
+          // Set the formatted results
+          setSearchResults(formattedHotels);
+          setFilteredHotels(formattedHotels);
+          setIsLoading(false);
+        } else {
+          // If no hotels found, generate placeholder hotels based on city
+          const placeholders = generatePlaceholderHotels(searchParams.cityCode);
+          setSearchResults(placeholders);
+          setFilteredHotels(placeholders);
+          setError('No hotels found for your search criteria. Showing sample hotels instead.');
           setIsLoading(false);
         }
       } else {
-        setFilteredHotels(searchResults);
+        setError(response.data.message || "Error fetching hotels");
+        setIsLoading(false);
       }
     };
     
+    // Process existing search results
+    const processExistingResults = () => {
+      // Process existing search results to ensure all required fields are present
+      const processedResults = searchResults.map(hotel => {
+        // Ensure location field is set
+        if (!hotel.location) {
+          const cityName = hotel.address?.cityName || searchParams.cityCode;
+          const countryCode = hotel.address?.countryCode || '';
+          hotel.location = countryCode ? `${cityName}, ${countryCode}` : cityName;
+        }
+        
+        // Ensure image exists
+        if (!hotel.image && hotel.images && hotel.images.length > 0) {
+          hotel.image = hotel.images[0];
+        } else if (!hotel.image) {
+          hotel.image = `https://source.unsplash.com/random/300x200/?hotel,${hotel.id || Math.random()}`;
+        }
+        
+        // Ensure amenities is an array
+        if (!hotel.amenities || !Array.isArray(hotel.amenities) || hotel.amenities.length === 0) {
+          hotel.amenities = ['Free WiFi', 'Air Conditioning', 'Pool'].slice(0, 3);
+        }
+        
+        return hotel;
+      });
+      
+      setSearchResults(processedResults);
+      setFilteredHotels(processedResults);
+    };
+
     fetchSearchResults();
-  }, [searchParams, searchResults]);
+  }, [searchParams, searchResults.length]);
+
+  // Generate placeholder hotels for empty results
+  const generatePlaceholderHotels = (cityCode, count = 5) => {
+    const cityInfo = {
+      name: cityCode,
+      country: 'Unknown'
+    };
+    
+    // Try to get better city info from destination suggestions
+    const destinationInfo = destinationSuggestions.find(dest => dest.code === cityCode);
+    if (destinationInfo) {
+      cityInfo.name = destinationInfo.name;
+      cityInfo.country = destinationInfo.country;
+    }
+    
+    const hotelNames = [
+      `${cityInfo.name} Grand Hotel`,
+      `${cityInfo.name} Plaza Resort`,
+      `Royal ${cityInfo.name} Hotel`,
+      `${cityInfo.name} Luxury Suites`,
+      `${cityInfo.name} Executive Inn`,
+      `${cityInfo.name} Palace Hotel`,
+      `${cityInfo.name} Continental`,
+      `${cityInfo.name} International`
+    ];
+    
+    const images = [
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80',
+      'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1470&q=80',
+      'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1470&q=80',
+      'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1600&q=80',
+      'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=1470&q=80'
+    ];
+    
+    const amenities = [
+      ['WiFi', 'Room Service', 'Restaurant'],
+      ['WiFi', 'Pool', 'Fitness Center'],
+      ['WiFi', 'Breakfast', 'Parking'],
+      ['WiFi', 'Spa', 'Bar'],
+      ['WiFi', 'Airport Shuttle', 'Conference Room']
+    ];
+    
+    return Array.from({length: Math.min(count, hotelNames.length)}, (_, i) => ({
+      id: `placeholder-${i}`,
+      name: hotelNames[i],
+      location: `${cityInfo.name}, ${cityInfo.country}`,
+      price: (Math.random() * 300 + 100).toFixed(2),
+      currency: 'USD',
+      rating: (Math.random() * 1 + 4).toFixed(1),
+      image: images[i % images.length],
+      amenities: amenities[i % amenities.length],
+      isPlaceholder: true
+    }));
+  };
 
   // Format price for display
   const formatPrice = (price) => {
@@ -481,8 +490,7 @@ export default function HotelSearchResults() {
     }));
   };
 
-  // Update the display format for dates shown to users (not API format)
-  const formatDisplayDate = (dateString) => {
+  const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -494,7 +502,6 @@ export default function HotelSearchResults() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        <p className="ml-3 text-lg text-blue-500">Loading hotels...</p>
       </div>
     );
   }
@@ -795,12 +802,7 @@ export default function HotelSearchResults() {
                     onClick={() => navigate(`/hotel-details`, { 
                       state: { 
                         hotelData: hotel,
-                        searchParams: {
-                          ...searchParams,
-                          // Ensure dates are in YYYY-MM-DD format for consistency
-                          checkInDate: formatDate(searchParams.checkInDate),
-                          checkOutDate: formatDate(searchParams.checkOutDate)
-                        }
+                        searchParams: searchParams
                       } 
                     })}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

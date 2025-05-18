@@ -17,7 +17,12 @@
         "postinstall": "npm install @vitejs/plugin-react vite --no-save || true",
         "supabase": "node start-app.js",
         "supabase:check": "node -e \"const { exec } = require('child_process'); exec('node setup-supabase-tables.js', (error, stdout, stderr) => { console.log(stdout); if (error) { console.error('Error checking Supabase tables:', error); } });\"",
-        "deploy": "npm run build && npm run start"
+        "deploy": "npm run build && npm run start",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "test:hotel-api": "node test-hotel-api.js",
+        "test:direct-amadeus": "node test-direct-amadeus.js",
+        "test:production-api": "node test-production-api.js",
+        "test:local-hotel-api": "node test-local-hotel-api.js"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
@@ -42,12 +47,13 @@
         "@supabase/supabase-js": "^2.39.0",
         "@vitejs/plugin-react": "^4.2.0",
         "amadeus": "^11.0.0",
+        "axios": "^1.6.2",
         "bcryptjs": "^2.4.3",
         "bootstrap": "^5.3.5",
         "cors": "^2.8.5",
         "dayjs": "^1.11.13",
         "dotenv": "^16.5.0",
-        "express": "^4.18.3",
+        "express": "^4.21.2",
         "jsonwebtoken": "^9.0.2",
         "lucide-react": "^0.487.0",
         "puppeteer": "^24.6.1",

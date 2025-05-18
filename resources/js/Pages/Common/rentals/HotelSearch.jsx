@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
-import { useNavigate ,useLocation} from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { FaSearch, FaCalendarAlt, FaUser } from 'react-icons/fa';
 import axios from 'axios';
-import apiConfig from '../../../../../src/config/api.js';
+import { popularDestinations } from './hotel';
+import * as amadeusUtils from './amadeusUtils';
+
+// Direct API credentials and URLs (these will be used as fallbacks)
+const AMADEUS_API_KEY = 'ZsgV43XBz0GbNk85zQuzvWnhARwXX4IE';
+const AMADEUS_API_SECRET = '2uFgpTVo5GA4ytwq';
+const API_URL = 'https://jet-set-go-psi.vercel.app/api';
 
 const HotelSearch = () => {
- 
-const location = useLocation();
-const navigate = useNavigate();
-const hotels = location.state?.hotels;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [destinations, setDestinations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Try to load last search from session storage
   const [searchParams, setSearchParams] = useState(() => {
@@ -27,131 +34,112 @@ const hotels = location.state?.hotels;
         };
       }
     }
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
     
+    // Default search params with future dates
+    const defaultDates = amadeusUtils.createDefaultDates();
     return {
       cityCode: '',
-      checkInDate: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
-      checkOutDate: `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`,
+      checkInDate: defaultDates.checkInDate,
+      checkOutDate: defaultDates.checkOutDate,
       adults: 2
     };
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  // Popular city codes for Amadeus API
-  const popularCities = [
-    { code: 'PAR', name: 'Paris', country: 'France' },
-    { code: 'LON', name: 'London', country: 'United Kingdom' },
-    { code: 'NYC', name: 'New York', country: 'United States' },
-    { code: 'TYO', name: 'Tokyo', country: 'Japan' },
-    { code: 'ROM', name: 'Rome', country: 'Italy' },
-    { code: 'SYD', name: 'Sydney', country: 'Australia' },
-    { code: 'SIN', name: 'Singapore', country: 'Singapore' },
-    { code: 'DXB', name: 'Dubai', country: 'UAE' },
-    { code: 'BKK', name: 'Bangkok', country: 'Thailand' },
-    { code: 'BCN', name: 'Barcelona', country: 'Spain' },
-    { code: 'AMS', name: 'Amsterdam', country: 'Netherlands' },
-    { code: 'HKG', name: 'Hong Kong', country: 'China' }
-  ];
-
-  const validateDates = () => {
-    const checkIn = new Date(searchParams.checkInDate);
-    const checkOut = new Date(searchParams.checkOutDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (checkIn < today) {
-      setError('Check-in date cannot be in the past');
-      return false;
-    }
-
-    if (checkOut <= checkIn) {
-      setError('Check-out date must be after check-in date');
-      return false;
-    }
-
-    const maxStay = new Date(today);
-    maxStay.setFullYear(maxStay.getFullYear() + 1);
-    if (checkIn > maxStay || checkOut > maxStay) {
-      setError('Dates cannot be more than 1 year in advance');
-      return false;
-    }
-
-    return true;
-  };
+  // Fetch destinations from API
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const response = await axios.get(`${amadeusUtils.API_URL}/hotels/destinations`);
+        if (response.data && response.data.success) {
+          setDestinations(response.data.data);
+        } else {
+          // Use popular destinations as fallback
+          setDestinations(popularDestinations);
+        }
+      } catch (error) {
+        console.error('Error fetching destinations:', error);
+        // Use popular destinations as fallback
+        setDestinations(popularDestinations);
+      }
+    };
+    
+    fetchDestinations();
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    if (!validateDates()) {
+    // Validate search parameters
+    const validation = amadeusUtils.validateSearchParams(searchParams);
+    if (!validation.isValid) {
+      setError(validation.errors[0]);
       setLoading(false);
       return;
     }
 
     try {
-      // Format dates properly as YYYY-MM-DD for API
-      const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      };
-
-      const formattedCheckInDate = formatDate(searchParams.checkInDate);
-      const formattedCheckOutDate = formatDate(searchParams.checkOutDate);
-
-      console.log('Searching with params:', {
-        destination: searchParams.cityCode,
-        checkInDate: formattedCheckInDate,
-        checkOutDate: formattedCheckOutDate,
-        travelers: searchParams.adults
-      });
-
-      const response = await axios.post('https://jet-set-go-psi.vercel.app/api/hotels/search', {
-        destination: searchParams.cityCode,
-        checkInDate: formattedCheckInDate,
-        checkOutDate: formattedCheckOutDate,
-        travelers: searchParams.adults
+      console.log('Searching with params:', searchParams);
+      
+      // Call the API with enhanced search parameters
+      const response = await axios.get(`${amadeusUtils.API_URL}/hotels/search`, {
+        params: amadeusUtils.buildSearchParams(searchParams),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
       });
 
       if (response.data.success) {
         // Store search params in session storage for persistence
         sessionStorage.setItem('lastHotelSearch', JSON.stringify({
           ...searchParams,
-          checkInDate: formattedCheckInDate,
-          checkOutDate: formattedCheckOutDate,
           timestamp: new Date().toISOString()
         }));
 
         navigate('/hotels/results', { 
           state: { 
             searchResults: response.data.data,
-            searchParams: {
-              ...searchParams,
-              checkInDate: formattedCheckInDate,
-              checkOutDate: formattedCheckOutDate
-            }
+            searchParams: searchParams 
           }
         });
       } else {
-        setError(response.data.message || 'Failed to fetch hotels');
+        setError(response.data.message || 'No hotels found for these search criteria');
       }
     } catch (err) {
       console.error('Search error:', err);
-      setError(err.response?.data?.message || 'An error occurred while searching');
+      if (err.response?.status === 429) {
+        setError('Too many requests. Please try again later.');
+      } else {
+        setError(err.response?.data?.message || 'An error occurred while searching. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleDateChange = (date, field) => {
-    setSearchParams({
-      ...searchParams,
-      [field]: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    });
+    const formattedDate = amadeusUtils.formatDate(date);
+    setSearchParams(prev => ({
+      ...prev,
+      [field]: formattedDate
+    }));
+
+    // If setting check-in date and it's after check-out, update check-out
+    if (field === 'checkInDate') {
+      const checkOut = new Date(searchParams.checkOutDate);
+      const newCheckIn = new Date(formattedDate);
+      
+      if (checkOut <= newCheckIn) {
+        const newCheckOut = new Date(newCheckIn);
+        newCheckOut.setDate(newCheckIn.getDate() + 1);
+        setSearchParams(prev => ({
+          ...prev,
+          checkOutDate: amadeusUtils.formatDate(newCheckOut)
+        }));
+      }
+    }
   };
 
   return (
@@ -175,7 +163,7 @@ const hotels = location.state?.hotels;
                 required
               >
                 <option value="">Select a destination</option>
-                {popularCities.map((city) => (
+                {destinations.map((city) => (
                   <option key={city.code} value={city.code}>
                     {city.name}, {city.country} ({city.code})
                   </option>

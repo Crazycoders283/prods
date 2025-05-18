@@ -12,25 +12,7 @@ import "./styles.css";
 import supabase from "../../../lib/supabase";
 import axios from 'axios';
 import { format } from 'date-fns';
-// import apiConfig from '../../../../../src/config/api.js';
-
-// Define a consistent base API URL
-const apiConfig = {
-  baseUrl: 'https://jet-set-go-psi.vercel.app',
-  endpoints: {
-    hotels: {
-      booking: 'https://jet-set-go-psi.vercel.app/api/hotels/booking',
-      offers: 'https://jet-set-go-psi.vercel.app/api/hotels/offers',
-      search: 'https://jet-set-go-psi.vercel.app/api/hotels/search',
-      destinations: 'https://jet-set-go-psi.vercel.app/api/hotels/destinations'
-    }
-  }
-};
-import Price from "../../../Components/Price";
-import currencyService from "../../../Services/CurrencyService";
-
-// Define a consistent base API URL for all hotel-related endpoints
-const BASE_API_URL = 'https://jet-set-go-psi.vercel.app/api/hotels';
+import * as amadeusUtils from './amadeusUtils';
 
 export default function HotelDetails() {
   const navigate = useNavigate();
@@ -39,7 +21,6 @@ export default function HotelDetails() {
   const searchParams = location.state?.searchParams || {};
 
   const [selectedHotel, setSelectedHotel] = useState(null);
-  const [currentHotelData, setCurrentHotelData] = useState(hotelData);
   const [activeImage, setActiveImage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
@@ -51,33 +32,22 @@ export default function HotelDetails() {
   });
   const [showReviews, setShowReviews] = useState(false);
   const [checkInDate, setCheckInDate] = useState(() => {
-    // Ensure checkInDate is a string in YYYY-MM-DD format
+    // Ensure checkInDate is a string
     if (searchParams?.checkInDate) {
-      // If it's already a date object or string, format it properly
-      const date = new Date(searchParams.checkInDate);
-      if (!isNaN(date.getTime())) {
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      }
-      return searchParams.checkInDate;
+      return typeof searchParams.checkInDate === 'string'
+        ? searchParams.checkInDate
+        : searchParams.checkInDate.toString();
     }
-    // Default to today's date if no date is provided
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    return "Jul 24, 2025";
   });
   const [checkOutDate, setCheckOutDate] = useState(() => {
-    // Ensure checkOutDate is a string in YYYY-MM-DD format
+    // Ensure checkOutDate is a string
     if (searchParams?.checkOutDate) {
-      // If it's already a date object or string, format it properly
-      const date = new Date(searchParams.checkOutDate);
-      if (!isNaN(date.getTime())) {
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-      }
-      return searchParams.checkOutDate;
+      return typeof searchParams.checkOutDate === 'string'
+        ? searchParams.checkOutDate
+        : searchParams.checkOutDate.toString();
     }
-    // Default to tomorrow's date if no date is provided
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    return "Jul 28, 2025";
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGuestDropdown, setShowGuestDropdown] = useState(false);
@@ -114,65 +84,24 @@ export default function HotelDetails() {
       navigate('/rental');
       return;
     }
-    
-    // Initialize currentHotelData when hotelData changes
-    setCurrentHotelData(location.state?.hotelData);
   }, [location.state?.hotelData, navigate]);
 
   useEffect(() => {
     const fetchHotelDetails = async () => {
       try {
         setIsLoading(true);
-        
-        // Fetch actual hotel details from API
-        if (currentHotelData && currentHotelData.id) {
-          try {
-            const response = await axios.get(`${BASE_API_URL}/booking/${currentHotelData.id}`, {
-              params: {
-                checkInDate: formatDate(checkInDate),
-                checkOutDate: formatDate(checkOutDate),
-                adults: guestCount.adults,
-                children: guestCount.children
-              }
-            });
-            
-            if (response.data?.success && response.data?.data) {
-              // Merge API data with hotelData
-              const apiHotelDetails = response.data.data;
-              
-              // Update hotelData with API details
-              const updatedHotelData = {
-                ...currentHotelData,
-                name: apiHotelDetails.name || currentHotelData.name,
-                description: apiHotelDetails.description || currentHotelData.description,
-                formattedAddress: apiHotelDetails.formattedAddress || currentHotelData.location,
-                phone: apiHotelDetails.phone || 'Phone not available',
-                email: apiHotelDetails.email || 'Email not available'
-              };
-              
-              // Use the updated data
-              setCurrentHotelData(updatedHotelData);
-              
-              console.log('API hotel details:', apiHotelDetails);
-            }
-          } catch (error) {
-            console.error('Error fetching API hotel details:', error);
-            // Continue with default data if API call fails
-          }
-        }
 
         // Default values
         const defaultPrice = 199;
         const defaultRating = 4.5;
-        const basePrice = parseFloat(currentHotelData?.price) || defaultPrice;
-        const hotelRating = parseFloat(currentHotelData?.rating) || defaultRating;
+        const basePrice = parseFloat(hotelData?.price) || defaultPrice;
+        const hotelRating = parseFloat(hotelData?.rating) || defaultRating;
 
         const mockRoomTypes = [
           {
             id: 0,
             name: "Deluxe Room",
             price: basePrice,
-            formattedPrice: currencyService.convertAndFormat(basePrice),
             capacity: 2,
             features: ["Mountain View", "King Bed", "Free WiFi"]
           },
@@ -180,7 +109,6 @@ export default function HotelDetails() {
             id: 1,
             name: "Premium Suite",
             price: basePrice * 1.5,
-            formattedPrice: currencyService.convertAndFormat(basePrice * 1.5),
             capacity: 3,
             features: ["Lake View", "King Bed + Sofa Bed", "Free WiFi", "Jacuzzi"]
           },
@@ -188,7 +116,6 @@ export default function HotelDetails() {
             id: 2,
             name: "Family Suite",
             price: basePrice * 2,
-            formattedPrice: currencyService.convertAndFormat(basePrice * 2),
             capacity: 4,
             features: ["Mountain View", "2 Queen Beds", "Free WiFi", "Kitchenette"]
           }
@@ -290,18 +217,14 @@ export default function HotelDetails() {
 
         // Create hotel object with guaranteed image properties
         setSelectedHotel({
-          ...currentHotelData,
-          longDescription: currentHotelData.description || 'Experience luxury and comfort at our hotel.',
-          address: currentHotelData.formattedAddress || currentHotelData.location || 'Address not available',
-          reviewCount: 128,
-          amenities: currentHotelData.amenities || ['WiFi', 'Room Service', 'Restaurant'],
+          ...hotelData,
+          longDescription: hotelData.description || 'Experience luxury and comfort at our hotel.',
+          address: hotelData.location || 'Address not available',
+          reviewCount: hotelData.reviewCount || 128,
+          amenities: hotelData.amenities || ['WiFi', 'Room Service', 'Restaurant'],
           images: {
-            main: currentHotelData.images?.main || defaultImagePlaceholder,
-            gallery: currentHotelData.images?.gallery || defaultGalleryImages
-          },
-          contactInfo: {
-            phone: currentHotelData.phone || 'Phone not available',
-            email: currentHotelData.email || 'Email not available'
+            main: hotelData.image || hotelData.images?.main || defaultImagePlaceholder,
+            gallery: hotelData.images?.gallery || defaultGalleryImages
           }
         });
 
@@ -309,14 +232,13 @@ export default function HotelDetails() {
       } catch (error) {
         console.error('Error fetching hotel details:', error);
         setIsLoading(false);
-        setError('Unable to load hotel details. Please try again later.');
       }
     };
 
     if (location.state?.hotelData) {
       fetchHotelDetails();
     }
-  }, [location.state?.hotelData, currentHotelData]);
+  }, [location.state?.hotelData, hotelData]);
 
   useEffect(() => {
     const fetchHotelOffer = async () => {
@@ -326,89 +248,36 @@ export default function HotelDetails() {
         setOfferLoading(true);
         setOfferError('');
 
-        // Start with a default timeout of 5 seconds
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 5000)
-        );
+        // Use direct API URL
+        const apiUrl = 'https://jet-set-go-psi.vercel.app/api';
         
-        try {
-          // Race the API call against the timeout
-          const response = await Promise.race([
-            axios.get(`${BASE_API_URL}/offers/${selectedHotel.id}`, {
-              params: {
-                checkInDate: formatDate(checkInDate),
-                checkOutDate: formatDate(checkOutDate),
-                adults: guestCount.adults,
-                children: guestCount.children
-              }
-            }),
-            timeoutPromise
-          ]);
-  
-          if (response.data?.success && response.data?.data) {
-            // Process offer data
-            const offerData = response.data.data;
-            
-            // If offers property exists, use it to update room types
-            if (offerData.offers && offerData.offers.length > 0) {
-              // Map API offers to room types with all required fields
-              const apiRoomTypes = offerData.offers.map((offer, index) => ({
-                id: index,
-                offerId: offer.id,
-                name: offer.room?.description?.text || `Room Option ${index + 1}`,
-                price: parseFloat(offer.price?.total) || parseFloat(selectedHotel?.price) || 199,
-                formattedPrice: currencyService.convertAndFormat(parseFloat(offer.price?.total) || parseFloat(selectedHotel?.price) || 199),
-                capacity: offer.guests?.adults || 2,
-                features: offer.room?.amenities || ["Free WiFi"],
-                bedType: offer.bedType || "Standard",
-                cancellationPolicy: offer.cancellationPolicy || "Standard cancellation policy",
-                description: offer.room?.description?.text || "Comfortable room with all standard amenities",
-                available: true
-              }));
-              
-              if (apiRoomTypes.length > 0) {
-                setRoomTypes(apiRoomTypes);
-              }
-            }
-            
-            setHotelOffer(offerData);
-          } else {
-            throw new Error('Invalid response format');
+        console.log('Using API URL for offers:', apiUrl);
+        
+        const response = await axios.get(`${apiUrl}/hotels/offers/${selectedHotel.id}`, {
+          params: {
+            checkInDate: amadeusUtils.formatDate(new Date(checkInDate)),
+            checkOutDate: amadeusUtils.formatDate(new Date(checkOutDate)),
+            adults: guestCount.adults,
+            children: guestCount.children
           }
-        } catch (innerError) {
-          console.log('API call failed, using mock data instead:', innerError);
-          
-          // Generate mock offer data as fallback
-          const mockOfferData = {
-            offers: [
-              {
-                id: 'mock-offer-1',
-                price: {
-                  total: (parseFloat(selectedHotel?.price) || 199).toString(),
-                  base: ((parseFloat(selectedHotel?.price) || 199) * 0.8).toString(),
-                },
-                room: {
-                  description: { text: 'Deluxe Room (Generated Offline)' },
-                  amenities: ['Free WiFi', 'Mountain View', 'King Bed']
-                },
-                guests: { adults: 2 },
-                rateCode: 'BAR'
-              }
-            ]
-          };
-          
-          setHotelOffer(mockOfferData);
+        });
+
+        if (response.data?.success && response.data?.data) {
+          // The backend now returns properly formatted hotel offer data
+          setHotelOffer(response.data.data);
+        } else {
+          throw new Error(response.data?.message || 'Invalid response format');
         }
       } catch (error) {
         console.error('Error fetching hotel offer:', error);
-        setOfferError(error.response?.data?.message || 'Unable to fetch current pricing. Please try again later.');
+        setOfferError(error.response?.data?.message || 'Could not retrieve availability for this hotel. Please try again later.');
       } finally {
         setOfferLoading(false);
       }
     };
 
     fetchHotelOffer();
-  }, [selectedHotel?.id, checkInDate, checkOutDate, guestCount]);
+  }, [selectedHotel?.id, checkInDate, checkOutDate, guestCount.adults, guestCount.children]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -532,61 +401,38 @@ export default function HotelDetails() {
     }
   };
 
-  const formatDate = (date) => {
-    if (!date) return '';
-    
-    // Handle both string dates and Date objects
-    const d = new Date(date);
-    if (isNaN(d.getTime())) {
-      console.error('Invalid date:', date);
-      return '';
-    }
-    
-    // Format as YYYY-MM-DD for API requests
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
-
   const handleReserveNow = async () => {
     try {
       // Format dates properly for the API
-      const formattedCheckIn = formatDate(checkInDate);
-      const formattedCheckOut = formatDate(checkOutDate);
+      const formattedCheckIn = amadeusUtils.formatDate(new Date(checkInDate));
+      const formattedCheckOut = amadeusUtils.formatDate(new Date(checkOutDate));
 
-      // Set a timeout for the API request
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 5000)
-      );
-
-      try {
-        // Race the API call against the timeout
-        const response = await Promise.race([
-          axios.get(`${BASE_API_URL}/offers/check-availability`, {
-            params: {
-              destination: currentHotelData.id,
-              checkInDate: formattedCheckIn,
-              checkOutDate: formattedCheckOut,
-              travelers: guestCount.adults
-            }
-          }),
-          timeoutPromise
-        ]);
-        
-        if (response.data.success) {
-          setShowCallbackRequest(true);
-        } else {
-          setError(response.data.message || "No availability found for these dates");
+      setError('');
+      // Use direct API URL
+      const apiUrl = 'https://jet-set-go-psi.vercel.app/api';
+      
+      console.log('Using API URL for check availability:', apiUrl);
+      
+      const response = await axios.get(`${apiUrl}/hotels/check-availability`, {
+        params: {
+          destination: hotelData.id,
+          checkInDate: formattedCheckIn,
+          checkOutDate: formattedCheckOut,
+          travelers: guestCount.adults
         }
-      } catch (innerError) {
-        console.log('Availability check failed, proceeding anyway:', innerError);
-        // Always show the callback request form even on network errors
+      });
+      
+      if (response.data.success) {
         setShowCallbackRequest(true);
+      } else {
+        setError(response.data.message || "No availability found for these dates");
       }
     } catch (error) {
-      console.error('Error in reserve flow:', error);
+      console.error('Error checking availability:', error);
       // Still show the callback request form even if there's an error
       setShowCallbackRequest(true);
       // Set a user-friendly error message
-      setError("We're experiencing connectivity issues, but you can still request a callback.");
+      setError(error.response?.data?.message || "Error checking availability");
     }
   };
 
@@ -622,14 +468,18 @@ export default function HotelDetails() {
 
       // Send confirmation email
       try {
-        // Use direct URL instead of dynamic construction
-        const apiUrl = 'https://jet-set-go-psi.vercel.app/api/send-email';
+        // Use direct API URL
+        const apiUrl = 'https://jet-set-go-psi.vercel.app/api';
+        
+        console.log('Using API URL for email:', apiUrl);
+        
+        const baseUrl = apiUrl.includes('/api') ? apiUrl.replace('/api', '') : 'https://jetsetterss.com';
 
         // Convert any potential Date objects to strings
         const checkInString = typeof checkInDate === 'string' ? checkInDate : String(checkInDate);
         const checkOutString = typeof checkOutDate === 'string' ? checkOutDate : String(checkOutDate);
 
-        const emailResponse = await fetch(apiUrl, {
+        const emailResponse = await fetch(`${baseUrl}/api/send-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -887,7 +737,7 @@ export default function HotelDetails() {
                           <p className="text-sm text-gray-600">Up to {room.capacity} guests</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-gray-900">{room.formattedPrice}</p>
+                          <p className="font-bold text-gray-900">${room.price}</p>
                           <p className="text-sm text-gray-600">per night</p>
                         </div>
                       </div>
@@ -1036,9 +886,9 @@ export default function HotelDetails() {
                       </div>
                     ) : hotelOffer?.offers?.[0]?.price ? (
                       <>
-                                              <span className="text-2xl font-bold text-gray-900">
-                        <Price amount={hotelOffer.offers[0].price.total} />
-                      </span>
+                        <span className="text-2xl font-bold text-gray-900">
+                          ${hotelOffer.offers[0].price.total}
+                        </span>
                         <span className="text-gray-600 ml-1">per night</span>
                         {hotelOffer.offers[0].rateCode && (
                           <div className="mt-1">
@@ -1049,7 +899,7 @@ export default function HotelDetails() {
                         )}
                       </>
                     ) : (
-                      <span className="text-2xl font-bold text-gray-900"><Price amount={currentRoomPrice} /></span>
+                      <span className="text-2xl font-bold text-gray-900">${currentRoomPrice}</span>
                     )}
                   </div>
                   <div className="flex items-center">
@@ -1068,7 +918,7 @@ export default function HotelDetails() {
                         <label className="block text-xs text-gray-500 mb-1">CHECK-IN</label>
                         <div className="flex items-center">
                           <Calendar size={16} className="text-gray-400 mr-2" />
-                          <span className="text-gray-800">{format(new Date(checkInDate), 'MMM dd, yyyy')}</span>
+                          <span className="text-gray-800">{checkInDate}</span>
                         </div>
                       </div>
                       <div
@@ -1078,7 +928,7 @@ export default function HotelDetails() {
                         <label className="block text-xs text-gray-500 mb-1">CHECK-OUT</label>
                         <div className="flex items-center">
                           <Calendar size={16} className="text-gray-400 mr-2" />
-                          <span className="text-gray-800">{format(new Date(checkOutDate), 'MMM dd, yyyy')}</span>
+                          <span className="text-gray-800">{checkOutDate}</span>
                         </div>
                       </div>
                     </div>
@@ -1176,42 +1026,42 @@ export default function HotelDetails() {
                     <>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Base Price</span>
-                        <span className="text-gray-700"><Price amount={hotelOffer.offers[0].price.base} /></span>
+                        <span className="text-gray-700">${hotelOffer.offers[0].price.base}</span>
                       </div>
                       {hotelOffer.offers[0].price.variations?.changes?.map((change, index) => (
                         <div key={index} className="flex justify-between text-sm text-gray-600">
                           <span>{format(new Date(change.startDate), 'MMM d')} - {format(new Date(change.endDate), 'MMM d')}</span>
-                          <span><Price amount={change.base} /> per night</span>
+                          <span>${change.base} per night</span>
                         </div>
                       ))}
                       <div className="flex justify-between">
                         <span className="text-gray-700">Taxes & Fees</span>
                         <span className="text-gray-700">
-                          <Price amount={(parseFloat(hotelOffer.offers[0].price.total) - parseFloat(hotelOffer.offers[0].price.base))} />
+                          ${(parseFloat(hotelOffer.offers[0].price.total) - parseFloat(hotelOffer.offers[0].price.base)).toFixed(2)}
                         </span>
                       </div>
                       <div className="border-t border-gray-200 pt-4 flex justify-between font-bold">
                         <span>Total</span>
-                        <span><Price amount={hotelOffer.offers[0].price.total} /></span>
+                        <span>${hotelOffer.offers[0].price.total}</span>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-gray-700"><Price amount={currentRoomPrice} /> x {totalNights} nights</span>
-                        <span className="text-gray-700"><Price amount={currentRoomPrice * totalNights} /></span>
+                        <span className="text-gray-700">${currentRoomPrice} x {totalNights} nights</span>
+                        <span className="text-gray-700">${currentRoomPrice * totalNights}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Cleaning fee</span>
-                        <span className="text-gray-700"><Price amount={50} /></span>
+                        <span className="text-gray-700">$50</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-700">Service fee</span>
-                        <span className="text-gray-700"><Price amount={30} /></span>
+                        <span className="text-gray-700">$30</span>
                       </div>
                       <div className="border-t border-gray-200 pt-4 flex justify-between font-bold">
                         <span>Total</span>
-                        <span><Price amount={totalPrice} /></span>
+                        <span>${totalPrice}</span>
                       </div>
                     </>
                   )}
@@ -1535,11 +1385,11 @@ export default function HotelDetails() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 mb-1">CHECK-IN</p>
-                  <p className="font-medium">{format(new Date(checkInDate), 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{checkInDate}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-1">CHECK-OUT</p>
-                  <p className="font-medium">{format(new Date(checkOutDate), 'MMM dd, yyyy')}</p>
+                  <p className="font-medium">{checkOutDate}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 mb-1">GUESTS</p>
@@ -1553,7 +1403,7 @@ export default function HotelDetails() {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span><Price amount={totalPrice} /></span>
+                  <span>${totalPrice}</span>
                 </div>
               </div>
             </div>
