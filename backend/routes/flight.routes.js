@@ -6,27 +6,47 @@ dotenv.config();
 
 const router = express.Router();
 
+// Initialize Amadeus client with fallback options for different environment variable formats
+const getAmadeusCredentials = () => {
+  // Try backend variables first (recommended for server-side code)
+  const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY;
+  const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET;
+  
+  // Log which variables we're using
+  const keySource = process.env.AMADEUS_API_KEY ? 'AMADEUS_API_KEY' : 
+                  (process.env.REACT_APP_AMADEUS_API_KEY ? 'REACT_APP_AMADEUS_API_KEY' : 'None');
+  const secretSource = process.env.AMADEUS_API_SECRET ? 'AMADEUS_API_SECRET' : 
+                     (process.env.REACT_APP_AMADEUS_API_SECRET ? 'REACT_APP_AMADEUS_API_SECRET' : 'None');
+  
+  console.log(`Using Amadeus credentials from: key=${keySource}, secret=${secretSource}`);
+  
+  return { apiKey, apiSecret };
+};
+
+const { apiKey, apiSecret } = getAmadeusCredentials();
+
 // Initialize Amadeus client
 const amadeus = new Amadeus({
-  clientId: process.env.REACT_APP_AMADEUS_API_KEY,
-  clientSecret: process.env.REACT_APP_AMADEUS_API_SECRET
+  clientId: apiKey,
+  clientSecret: apiSecret
 });
 
 console.log('Amadeus client initialized with:', {
-  clientId: process.env.REACT_APP_AMADEUS_API_KEY,
-  clientSecret: process.env.REACT_APP_AMADEUS_API_SECRET?.substring(0, 4) + '...' // Log only first 4 chars of secret
+  clientId: apiKey,
+  clientSecret: apiSecret?.substring(0, 4) + '...' // Log only first 4 chars of secret
 });
 
 // Flight search endpoint
 router.post('/search', async (req, res) => {
   try {
     // Check if Amadeus credentials are available
+    const { apiKey, apiSecret } = getAmadeusCredentials();
     console.log('Checking Amadeus credentials:', {
-      key: process.env.REACT_APP_AMADEUS_API_KEY ? 'Available' : 'Missing',
-      secret: process.env.REACT_APP_AMADEUS_API_SECRET ? 'Available' : 'Missing'
+      key: apiKey ? 'Available' : 'Missing',
+      secret: apiSecret ? 'Available' : 'Missing'
     });
     
-    if (!process.env.REACT_APP_AMADEUS_API_KEY || !process.env.REACT_APP_AMADEUS_API_SECRET) {
+    if (!apiKey || !apiSecret) {
       console.error('Missing Amadeus API credentials');
       
       // Return mock data when credentials are missing
