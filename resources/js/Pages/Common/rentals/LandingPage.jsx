@@ -32,6 +32,8 @@ import { useState, useEffect, useRef } from "react"
 import axios from 'axios';
 import * as amadeusUtils from './amadeusUtils';
 import DirectAmadeusService from '../../../Services/DirectAmadeusService';
+// Import API_BASE_URL from centralized API configuration
+import { API_BASE_URL } from '../../../../../src/config/api.js';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -80,9 +82,9 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchDestinations = async () => {
       try {
-        // Use direct API URL
-        const apiUrl = 'https://jet-set-go-psi.vercel.app/api';
-        const response = await axios.get(`${apiUrl}/hotels/destinations`);
+        // Use API_BASE_URL from centralized config
+        console.log('Using API URL from config:', API_BASE_URL);
+        const response = await axios.get(`${API_BASE_URL}/hotels/destinations`);
         if (response.data.success) {
           setDestinationSuggestions(response.data.data);
         }
@@ -125,13 +127,12 @@ export default function LandingPage() {
         travelers: searchTravelers
       });
 
-      // Use direct API URL
-      const apiUrl = 'https://jet-set-go-psi.vercel.app/api';
-      console.log('Using API URL:', apiUrl);
+      // Use API_BASE_URL from centralized config
+      console.log('Using API URL from config:', API_BASE_URL);
       
       try {
         // First try the regular search endpoint
-        const response = await axios.get(`${apiUrl}/hotels/search`, {
+        const response = await axios.get(`${API_BASE_URL}/hotels/search`, {
           params: {
             destination: cityCode,
             checkInDate: formattedCheckInDate,

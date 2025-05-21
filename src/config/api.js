@@ -1,17 +1,54 @@
 // API URL Configuration
 
-// Get the base API URL from environment variables
+// Default production and development URLs
+const DEFAULT_PROD_URL = 'https://jet-set-go-psi.vercel.app/api';
+const DEFAULT_DEV_PORT = 5004;
+
+// Get the base API URL from environment variables - prioritize frontend-safe variables
 const getApiBaseUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'https://jet-set-go-psi.vercel.app/api';
+  // Check for local development environment first
+  const isLocalDevelopment = window.location.hostname === 'localhost' || 
+                             window.location.hostname === '127.0.0.1';
+  
+  // In local development, use the local API server
+  if (isLocalDevelopment) {
+    // Try to get port from environment variables
+    let port;
+    
+    // First try Vite-injected environment variables (frontend-safe)
+    if (import.meta.env?.VITE_API_PORT) {
+      port = import.meta.env.VITE_API_PORT;
+    }
+    // Then try Node.js environment variables (only works in SSR/backend)
+    else if (typeof process !== 'undefined' && process.env?.PORT) {
+      port = process.env.PORT;
+    }
+    // Fall back to default port
+    else {
+      port = DEFAULT_DEV_PORT;
+    }
+    
+    return `http://localhost:${port}/api`;
+  }
+  
+  // For production, prioritize environment variables
+  // First try Vite-injected variables (these are frontend-safe)
+  let apiUrl = import.meta.env?.VITE_API_URL;
+  
+  // Then try VITE_APP_URL (which is also defined in your .env)
+  if (!apiUrl && import.meta.env?.VITE_APP_URL) {
+    apiUrl = import.meta.env.VITE_APP_URL;
+  }
+  
+  // If still no URL, fall back to default production URL
+  if (!apiUrl) {
+    apiUrl = DEFAULT_PROD_URL;
+    console.log('Using default production API URL:', apiUrl);
+  }
   
   // Handle cases where API URL doesn't have protocol
   if (apiUrl && !apiUrl.startsWith('http') && !apiUrl.startsWith('/')) {
-    return 'https://' + apiUrl;
-  }
-  
-  // If VITE_API_URL is empty, use the Vercel deployment URL
-  if (!apiUrl) {
-    return 'https://jet-set-go-psi.vercel.app/api';
+    apiUrl = 'https://' + apiUrl;
   }
   
   // Ensure URL has no trailing slash conflicts
@@ -35,6 +72,9 @@ const createEndpoint = (path) => {
   
   return `${API_BASE_URL}${path}`;
 };
+
+// Export the base URL directly for components to use
+export { API_BASE_URL };
 
 // API endpoints
 export const endpoints = {

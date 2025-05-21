@@ -6,7 +6,7 @@ dotenv.config();
 
 class AmadeusService {
   constructor() {
-    // Update base URLs to use the correct API versions
+    // Use test API endpoints since your credentials are for the test environment
     this.baseUrls = {
       v1: 'https://test.api.amadeus.com/v1',
       v2: 'https://test.api.amadeus.com/v2',
@@ -23,14 +23,38 @@ class AmadeusService {
     }
 
     try {
-      // Try server-side variables first, fall back to hardcoded credentials if needed
-      const apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY || 'ZsgV43XBz0GbNk85zQuzvWnhARwXX4IE';
-      const apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET || '2uFgpTVo5GA4ytwq';
+      // Use updated API keys for Amadeus
+      // Try three different sources to find valid credentials
+      let apiKey = process.env.AMADEUS_API_KEY || process.env.REACT_APP_AMADEUS_API_KEY;
+      let apiSecret = process.env.AMADEUS_API_SECRET || process.env.REACT_APP_AMADEUS_API_SECRET;
       
-      console.log('Getting Amadeus token with API key:', apiKey.substring(0, 5) + '...');
+      // Log which keys we're going to use
+      console.log('Amadeus API credentials being used:', {
+        keySource: process.env.AMADEUS_API_KEY ? 'AMADEUS_API_KEY' : 
+                 (process.env.REACT_APP_AMADEUS_API_KEY ? 'REACT_APP_AMADEUS_API_KEY' : 'none'),
+        secretSource: process.env.AMADEUS_API_SECRET ? 'AMADEUS_API_SECRET' : 
+                    (process.env.REACT_APP_AMADEUS_API_SECRET ? 'REACT_APP_AMADEUS_API_SECRET' : 'none'),
+        keyFirstChars: apiKey ? apiKey.substring(0, 5) + '...' : 'undefined',
+        secretLength: apiSecret ? apiSecret.length : 0
+      });
       
-      const response = await axios.post(`${this.baseUrls.v1}/security/oauth2/token`, 
-        `grant_type=client_credentials&client_id=${apiKey}&client_secret=${apiSecret}`,
+      // Check if credentials are available
+      if (!apiKey || !apiSecret) {
+        console.error('ERROR: Missing Amadeus API credentials in environment variables');
+        throw new Error('Missing Amadeus API credentials');
+      }
+      
+      // Use URLSearchParams for proper encoding
+      const params = new URLSearchParams();
+      params.append('grant_type', 'client_credentials');
+      params.append('client_id', apiKey);
+      params.append('client_secret', apiSecret);
+      
+      console.log('Attempting Amadeus authentication with credentials...');
+      
+      const response = await axios.post(
+        `${this.baseUrls.v1}/security/oauth2/token`, 
+        params.toString(),
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -42,10 +66,13 @@ class AmadeusService {
       // Set token expiration to 29 minutes from now (tokens typically expire in 30 minutes)
       this.tokenExpiration = new Date(Date.now() + 29 * 60 * 1000);
       
-      console.log('Successfully obtained Amadeus token');
+      console.log('✅ Successfully obtained Amadeus token');
       return this.token;
     } catch (error) {
-      console.error('Error getting Amadeus access token:', error.response?.data || error.message);
+      console.error('❌ Error getting Amadeus access token:', error.response?.data || error.message);
+      if (error.response?.data) {
+        console.error('Detailed error information:', JSON.stringify(error.response.data, null, 2));
+      }
       throw error;
     }
   }
