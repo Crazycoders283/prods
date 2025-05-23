@@ -46,7 +46,7 @@ const CurrencySelector = () => {
     <div className="relative">
       <button 
         onClick={toggleDropdown}
-        className="flex items-center space-x-1 text-sm text-gray-700 hover:text-gray-900 py-1 px-2 rounded-md hover:bg-gray-100 transition-colors"
+        className="flex items-center space-x-1 text-sm text-white hover:text-gray-900 py-1 px-2 rounded-md hover:bg-gray-100 transition-colors"
       >
         <span className="font-medium">{currentCurrency.symbol}</span>
         <span>{currentCurrency.code}</span>

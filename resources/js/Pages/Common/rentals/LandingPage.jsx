@@ -1588,14 +1588,6 @@ export default function LandingPage() {
             <h3 className="text-lg font-bold text-gray-800">Trusted By Travelers Worldwide</h3>
           </div>
           
-          <div className="flex flex-wrap justify-center items-center gap-8 max-w-4xl mx-auto">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Tripadvisor_logo.svg/512px-Tripadvisor_logo.svg.png" alt="TripAdvisor" className="h-8 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Booking.com_logo.svg/512px-Booking.com_logo.svg.png" alt="Booking.com" className="h-8 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Expedia_logo.svg/512px-Expedia_logo.svg.png" alt="Expedia" className="h-8 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Airbnb_Logo_B%C3%A9lo.svg/512px-Airbnb_Logo_B%C3%A9lo.svg.png" alt="Airbnb" className="h-8 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Logo_of_Hotels.com.svg/512px-Logo_of_Hotels.com.svg.png" alt="Hotels.com" className="h-8 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all" />
-          </div>
-          
           <div className="flex justify-center gap-8 mt-8 max-w-xl mx-auto">
             <div className="flex items-center">
               <Check className="text-green-500 mr-2" />

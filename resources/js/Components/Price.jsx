@@ -49,7 +49,7 @@ const Price = ({ amount, className = '', showCode = false }) => {
   return (
     <span className={`price ${className}`}>
       {formattedPrice}
-      {showCode && <span className="ml-1 text-xs opacity-70">{currencyCode}</span>}
+      {showCode && <span className="ml-1 text-xs text-white opacity-70">{currencyCode}</span>}
     </span>
   );
 };
