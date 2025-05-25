@@ -25,17 +25,15 @@ class User {
       // Generate a full name from firstName and lastName
       const fullName = `${firstName} ${lastName}`.trim();
       
-      // Include 'name' field which appears to be required
-      console.log('Attempting insert with name field included');
-      
+      // Insert user with basic fields first
       const { data, error } = await supabase
         .from('users')
         .insert([{
           email: email,
           password: hashedPassword,
-          name: fullName, // Adding the required name field
-          google_id: googleId,
-          is_google_account: isGoogleAccount
+          name: fullName,
+          first_name: firstName,
+          last_name: lastName
         }])
         .select();
 
@@ -52,23 +50,8 @@ class User {
       console.log('User created successfully:', { 
         id: createdUser.id, 
         email: createdUser.email, 
-        name: createdUser.name,
-        isGoogle: createdUser.is_google_account 
+        name: createdUser.name
       });
-      
-      // Now try to update with the remaining fields separately
-      console.log('Attempting to update user with remaining fields');
-      try {
-        await supabase
-          .from('users')
-          .update({
-            first_name: firstName,
-            last_name: lastName
-          })
-          .eq('id', createdUser.id);
-      } catch (updateError) {
-        console.log('Non-critical update error (can be ignored):', updateError);
-      }
       
       // Transform the response to match our API format
       return {
@@ -77,8 +60,6 @@ class User {
         lastName: lastName,
         name: createdUser.name,
         email: createdUser.email,
-        googleId: createdUser.google_id,
-        isGoogleAccount: createdUser.is_google_account,
         role: 'user' // Default role
       };
     } catch (error) {

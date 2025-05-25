@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Always use current domain for API calls
-const API_URL = window.location.origin + '/api';
+// API URL based on environment
+const API_URL = 'http://localhost:5004/api';
 
 console.log('Using API URL:', API_URL);
 
@@ -36,10 +36,10 @@ api.interceptors.response.use(
 
 // Auth API endpoints
 export const authAPI = {
-  register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
-  googleLogin: (tokenData) => api.post('/auth/google-login', tokenData),
-  getCurrentUser: () => api.get('/auth/me'),
+  register: (userData) => api.post('auth/register', userData),
+  login: (credentials) => api.post('auth/login', credentials),
+  googleLogin: (tokenData) => api.post('auth/google-login', tokenData),
+  getCurrentUser: () => api.get('auth/me'),
   logout: () => {
     localStorage.removeItem('token');
     return Promise.resolve();
@@ -48,10 +48,10 @@ export const authAPI = {
 
 // User API endpoints
 export const userAPI = {
-  getAllUsers: () => api.get('/users'),
-  getUserById: (userId) => api.get(`/users/${userId}`),
-  updateUser: (userId, userData) => api.put(`/users/${userId}`, userData),
-  deleteUser: (userId) => api.delete(`/users/${userId}`)
+  getAllUsers: () => api.get('users'),
+  getUserById: (userId) => api.get(`users/${userId}`),
+  updateUser: (userId, userData) => api.put(`users/${userId}`, userData),
+  deleteUser: (userId) => api.delete(`users/${userId}`)
 };
 
 export default api;

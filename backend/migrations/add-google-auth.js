@@ -8,53 +8,21 @@ const addGoogleAuthFields = async () => {
   try {
     console.log('Starting migration: Adding Google authentication fields to users table...');
     
-    // Check if the column google_id already exists
-    const { data: columns, error: columnError } = await supabase
-      .from('users')
-      .select()
-      .limit(1);
+    // Add google_id column
+    const { error: googleIdError } = await supabase.rpc('exec_sql', {
+      sql_string: `
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS google_id text,
+        ADD COLUMN IF NOT EXISTS is_google_account boolean DEFAULT false
+      `
+    });
     
-    if (columnError) {
-      console.error('Error checking users table:', columnError);
+    if (googleIdError) {
+      console.error('Error adding Google auth columns:', googleIdError);
       return false;
     }
     
-    let needToAddColumns = true;
-    
-    // If we have any data, check if the google_id property exists
-    if (columns && columns.length > 0 && columns[0].hasOwnProperty('google_id')) {
-      console.log('Google authentication fields already exist. Skipping migration.');
-      needToAddColumns = false;
-    }
-    
-    if (needToAddColumns) {
-      // Add google_id column
-      const { error: googleIdError } = await supabase.rpc('add_column_if_not_exists', {
-        table_name: 'users',
-        column_name: 'google_id',
-        column_type: 'text'
-      });
-      
-      if (googleIdError) {
-        console.error('Error adding google_id column:', googleIdError);
-        return false;
-      }
-      
-      // Add is_google_account column with default value false
-      const { error: isGoogleError } = await supabase.rpc('add_column_if_not_exists', {
-        table_name: 'users',
-        column_name: 'is_google_account',
-        column_type: 'boolean default false'
-      });
-      
-      if (isGoogleError) {
-        console.error('Error adding is_google_account column:', isGoogleError);
-        return false;
-      }
-      
-      console.log('✅ Migration successful: Google authentication fields added to users table');
-    }
-    
+    console.log('✅ Migration successful: Google authentication fields added to users table');
     return true;
   } catch (error) {
     console.error('Migration failed:', error);
