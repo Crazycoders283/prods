@@ -22,7 +22,8 @@
         "test:hotel-api": "node test-hotel-api.js",
         "test:direct-amadeus": "node test-direct-amadeus.js",
         "test:production-api": "node test-production-api.js",
-        "test:local-hotel-api": "node test-local-hotel-api.js"
+        "test:local-hotel-api": "node test-local-hotel-api.js",
+        "test:arc-pay-flight": "node test-arc-pay-flight.js"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",

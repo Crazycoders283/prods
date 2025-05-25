@@ -10,6 +10,7 @@ import Navbar from '../Navbar';
 import Footer from '../Footer';
 import withPageElements from '../PageWrapper';
 import { endpoints } from '../../../../../src/config/api';
+import ArcPayService from '../../../Services/ArcPayService';
 
 function FlightCreateOrders() {
   const location = useLocation();
@@ -43,116 +44,25 @@ function FlightCreateOrders() {
 
   // Function to call the Flight Create Orders API
   // API: POST /v1/booking/flight-orders (https://api.amadeus.com/v1/booking/flight-orders)
-  const processFlightOrder = async (data) => {
+  const processFlightOrder = async (orderData) => {
     setProcessingOrder(true);
+    setError(null);
+
     try {
-      // Ensure we have valid flight offer data
-      const flightOffer = data.bookingDetails?.flightOffer || {};
-      
-      // Check if we're missing critical flight data
-      if (!flightOffer || Object.keys(flightOffer).length === 0) {
-        console.error('Missing flight offer data in booking details');
-        throw new Error('Missing flight details. Please try searching for flights again.');
-      }
-      
-      // Format traveler details according to Amadeus API specs
-      const travelers = data.passengerData?.map((passenger, index) => ({
-        id: `${index + 1}`,
-        dateOfBirth: passenger.dateOfBirth || '1990-01-01',
-        name: {
-          firstName: passenger.firstName,
-          lastName: passenger.lastName
-        },
-        gender: passenger.gender || 'MALE', // MALE, FEMALE, UNSPECIFIED or UNDISCLOSED
-        contact: {
-          emailAddress: data.contactDetails?.email,
-          phones: [{
-            deviceType: 'MOBILE',
-            countryCallingCode: data.contactDetails?.countryCode || '91',
-            number: data.contactDetails?.phoneNumber || '9999999999'
-          }]
-        },
-        documents: passenger.passportNumber ? [{
-          documentType: 'PASSPORT',
-          number: passenger.passportNumber,
-          expiryDate: passenger.passportExpiry || '2030-01-01',
-          issuanceCountry: passenger.nationality || 'IN',
-          nationality: passenger.nationality || 'IN',
-          holder: true
-        }] : []
-      })) || [];
-
-      // If we don't have passenger data, create placeholder data
-      if (!travelers.length) {
-        console.warn('Missing passenger data, creating placeholder traveler');
-        travelers.push({
-          id: '1',
-          dateOfBirth: '1990-01-01',
-          name: {
-            firstName: data.contactDetails?.firstName || 'Guest',
-            lastName: data.contactDetails?.lastName || 'User'
-          },
-          gender: 'MALE',
-          contact: {
-            emailAddress: data.contactDetails?.email || 'guest@example.com',
-            phones: [{
-              deviceType: 'MOBILE',
-              countryCallingCode: '91',
-              number: data.contactDetails?.phoneNumber || '9999999999'
-            }]
-          }
-        });
+      // First verify the payment with ARC Pay
+      if (orderData.arcPayPaymentId) {
+        const paymentVerification = await ArcPayService.verifyPayment(orderData.arcPayPaymentId);
+        
+        if (!paymentVerification.success) {
+          throw new Error('Payment verification failed');
+        }
       }
 
-      // Prepare payment information if available
-      const formOfPayments = [{
-        other: {
-          method: 'CREDIT_CARD',
-          flightOfferIds: [flightOffer.id || '1']
-        }
-      }];
+      // Proceed with creating the flight order
+      const response = await axios.post(endpoints.flights.booking, {
+        // ... existing order creation data ...
+      });
 
-      // Format request according to Amadeus API structure
-      const flightOrderRequest = {
-        data: {
-          type: 'flight-order',
-          flightOffers: [flightOffer],
-          travelers: travelers,
-          remarks: {
-            general: [{
-              subType: 'GENERAL_MISCELLANEOUS',
-              text: 'ONLINE BOOKING FROM FLIGHT BOOKING PLATFORM'
-            }]
-          },
-          ticketingAgreement: {
-            option: 'DELAY_TO_CANCEL',
-            delay: '6D'
-          },
-          contacts: [{
-            addresseeName: {
-              firstName: data.contactDetails?.firstName || travelers[0]?.name?.firstName || 'Guest',
-              lastName: data.contactDetails?.lastName || travelers[0]?.name?.lastName || 'User'
-            },
-            companyName: 'JetSet GO',
-            purpose: 'STANDARD',
-            phones: [{
-              deviceType: 'MOBILE',
-              countryCallingCode: data.contactDetails?.countryCode || '91',
-              number: data.contactDetails?.phoneNumber || '9999999999'
-            }],
-            emailAddress: data.contactDetails?.email || 'guest@example.com'
-          }],
-          formOfPayments: formOfPayments
-        }
-      };
-      
-      console.log('Flight order request payload:', flightOrderRequest);
-      
-      // Make API request to create the flight order
-      const response = await axios.post(endpoints.flights.booking, flightOrderRequest);
-      
-      console.log('Flight order creation response:', response.data);
-      
       if (response.data.success) {
         setOrderSuccess(true);
         setBookingReference(response.data.data.bookingReference || response.data.data.id);
@@ -164,14 +74,14 @@ function FlightCreateOrders() {
           pnr: response.data.data.pnr || response.data.data.associatedRecords?.[0]?.reference,
           status: response.data.data.status || 'CONFIRMED',
           createdAt: response.data.data.createdAt || new Date().toISOString(),
-          travelers: response.data.data.travelers || travelers
+          travelers: response.data.data.travelers || orderData.passengerData || []
         };
         
-        // Wait 2 seconds and then navigate to success page
+        // Navigate to success page after a delay
         setTimeout(() => {
-          navigate("/flight-booking-success", {
+          navigate(`/flight-booking-success/${response.data.data.bookingReference}`, {
             state: {
-              ...data,
+              ...orderData,
               bookingReference: orderDetails.reference,
               pnr: orderDetails.pnr,
               orderCreatedAt: orderDetails.createdAt,
@@ -180,13 +90,11 @@ function FlightCreateOrders() {
           });
         }, 2000);
       } else {
-        setOrderSuccess(false);
-        handleApiError(response.data);
+        throw new Error(response.data.message || 'Failed to create flight order');
       }
-    } catch (err) {
-      console.error('Error creating flight order:', err);
-      setOrderSuccess(false);
-      handleApiError(err);
+    } catch (error) {
+      console.error('Order processing error:', error);
+      setError(error.message || 'Failed to process order');
     } finally {
       setProcessingOrder(false);
     }

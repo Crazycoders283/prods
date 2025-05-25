@@ -9,6 +9,7 @@ import {
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 import withPageElements from "../PageWrapper";
+import ArcPayService from "../../../Services/ArcPayService";
 
 function FlightPayment() {
   const location = useLocation();
@@ -163,32 +164,64 @@ function FlightPayment() {
     setProcessingPayment(true);
     
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Initialize payment with ARC Pay
+      const paymentData = {
+        amount: finalAmount,
+        currency: 'USD',
+        orderId: `FLIGHT-${Date.now()}`,
+        customerEmail: paymentData?.passengerData[0]?.email || '',
+        customerName: `${paymentData?.passengerData[0]?.firstName} ${paymentData?.passengerData[0]?.lastName}`,
+        paymentMethod: activePaymentMethod,
+        cardDetails: activePaymentMethod === "creditCard" ? {
+          cardNumber: cardDetails.cardNumber,
+          cardHolder: cardDetails.cardHolder,
+          expiryDate: cardDetails.expiryDate,
+          cvv: cardDetails.cvv
+        } : null,
+        billingAddress: {
+          // Add billing address details if needed
+        },
+        returnUrl: `${window.location.origin}/flight-create-orders`,
+        cancelUrl: `${window.location.origin}/flight-payment`
+      };
+
+      const paymentResponse = await ArcPayService.initializePayment(paymentData);
       
-      const isSuccess = Math.random() > 0.2;
-      setPaymentSuccess(isSuccess);
-      setShowPaymentResult(true);
-      
-      if (isSuccess) {
-        setTimeout(() => {
-          // Navigate to the Flight Create Orders page instead of success page
-          navigate("/flight-create-orders", { 
-            state: { 
-              ...paymentData,
-              paymentSuccess: true,
-              paymentMethod: activePaymentMethod,
-              calculatedFare: {
-                ...paymentData?.calculatedFare,
-                discount: discountAmount,
-                finalAmount: finalAmount
-              },
-              paymentDetails: activePaymentMethod === "creditCard" ? 
-                { ...cardDetails, cardNumber: `**** **** **** ${cardDetails.cardNumber.slice(-4)}` } : 
-                { upiId }
-            } 
-          });
-        }, 2000);
+      if (paymentResponse.success) {
+        // Process the payment
+        const processResponse = await ArcPayService.processPayment(
+          paymentResponse.paymentId,
+          paymentData
+        );
+
+        if (processResponse.success) {
+          setPaymentSuccess(true);
+          setShowPaymentResult(true);
+          
+          // Navigate to the Flight Create Orders page
+          setTimeout(() => {
+            navigate("/flight-create-orders", { 
+              state: { 
+                ...paymentData,
+                paymentSuccess: true,
+                paymentMethod: activePaymentMethod,
+                calculatedFare: {
+                  ...paymentData?.calculatedFare,
+                  discount: discountAmount,
+                  finalAmount: finalAmount
+                },
+                paymentDetails: activePaymentMethod === "creditCard" ? 
+                  { ...cardDetails, cardNumber: `**** **** **** ${cardDetails.cardNumber.slice(-4)}` } : 
+                  { upiId },
+                arcPayPaymentId: paymentResponse.paymentId
+              } 
+            });
+          }, 2000);
+        } else {
+          throw new Error(processResponse.message || 'Payment processing failed');
+        }
+      } else {
+        throw new Error(paymentResponse.message || 'Payment initialization failed');
       }
     } catch (error) {
       console.error("Payment processing error:", error);
