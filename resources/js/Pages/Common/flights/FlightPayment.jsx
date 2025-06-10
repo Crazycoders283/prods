@@ -161,7 +161,7 @@ function FlightPayment() {
       return;
     }
 
-    setProcessingPayment(true);
+    // setProcessingPayment(true);
     
     try {
       // Initialize payment with ARC Pay
@@ -169,8 +169,8 @@ function FlightPayment() {
         amount: finalAmount,
         currency: 'USD',
         orderId: `FLIGHT-${Date.now()}`,
-        customerEmail: paymentData?.passengerData[0]?.email || '',
-        customerName: `${paymentData?.passengerData[0]?.firstName} ${paymentData?.passengerData[0]?.lastName}`,
+        customerEmail: 'abc@gmail.com',//paymentData?.passengerData[0]?.email || '',
+        customerName: "Manindarreddy",//`${paymentData?.passengerData[0]?.firstName} ${paymentData?.passengerData[0]?.lastName}`,
         paymentMethod: activePaymentMethod,
         cardDetails: activePaymentMethod === "creditCard" ? {
           cardNumber: cardDetails.cardNumber,
@@ -186,7 +186,7 @@ function FlightPayment() {
       };
 
       const paymentResponse = await ArcPayService.initializePayment(paymentData);
-      
+      console.error(paymentResponse,'mmmmmmmmmmmmmmmmmmmmmmmmm')
       if (paymentResponse.success) {
         // Process the payment
         const processResponse = await ArcPayService.processPayment(

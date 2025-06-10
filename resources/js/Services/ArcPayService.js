@@ -2,11 +2,19 @@ import axios from 'axios';
 
 const ARC_PAY_API_URL = 'https://api.arcpay.travel/api/rest/version/77/merchant/TESTARC05511704';
 const ARC_PAY_MERCHANT_ID = 'TESTARC05511704';
+const ARC_PAY_API_KEY = '4d41a81750f1ee3f6aa4adf0dfd63190c';
 
 class ArcPayService {
     constructor() {
         this.apiUrl = ARC_PAY_API_URL;
         this.merchantId = ARC_PAY_MERCHANT_ID;
+    this.api = axios.create({
+      baseURL: this.apiUrl,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${ARC_PAY_API_KEY}`
+      }
+    });
     }
 
     async initializePayment(paymentData) {
