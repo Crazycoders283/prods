@@ -361,8 +361,7 @@ function FlightBookingConfirmation() {
   };
 
   const handleLogin = () => {
-    // In a real app, this would trigger a login flow
-    setIsLoggedIn(true);
+    navigate('/login');
   };
 
   const toggleEditMode = () => {
