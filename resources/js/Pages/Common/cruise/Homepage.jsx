@@ -164,12 +164,6 @@ const TestimonialBanner = () => {
             <h3 className="text-2xl md:text-3xl font-bold mb-2">"The best cruise booking experience I've ever had!"</h3>
             <p className="opacity-90 mb-4">— Sarah Johnson, traveled with Royal Caribbean</p>
             <div className="flex items-center justify-center md:justify-start pl-10">
-              <FaStar className="text-yellow-300" />
-              <FaStar className="text-yellow-300" />
-              <FaStar className="text-yellow-300" />
-              <FaStar className="text-yellow-300" />
-              <FaStar className="text-yellow-300" />
-              <span className="ml-7 text-sm opacity-90">5.0 from over 3,200 reviews</span>
             </div>
           </div>
           
@@ -572,7 +566,7 @@ const HomePage = () => {
             <Sparkles className="h-5 w-5 text-yellow-300 mr-2 flex-shrink-0" />
             <p className={`text-white ${isMobileView ? 'text-xs' : 'text-base'} font-medium tracking-wide`}>
               <span className="text-yellow-300 font-bold">SUMMER SPECIAL:</span> 15% OFF!{' '}
-              <span className="font-bold text-yellow-300 whitespace-nowrap">{isMobileView ? '' : 'Call '}8121716969</span>
+              <span className="font-bold text-yellow-300 whitespace-nowrap">{isMobileView ? '' : 'Call '}(888)581-3028</span>
             </p>
           </div>
         </div>

@@ -72,8 +72,8 @@ const Careers = () => {
   return (
     <>
       <Helmet>
-        <title>Careers - JET SETTERS</title>
-        <meta name="description" content="Join our team at JET SETTERS and help create unforgettable cruise experiences for travelers worldwide." />
+        <title>Careers - JETSETTERS</title>
+        <meta name="description" content="Join our team at JETSETTERS and help create unforgettable cruise experiences for travelers worldwide." />
       </Helmet>
       
       <Navbar forceScrolled={true} />
@@ -90,7 +90,7 @@ const Careers = () => {
           <Col lg={6} className="mb-4 mb-lg-0">
             <h2 className="mb-4">Why Work With Us?</h2>
             <p>
-              At JET SETTERS, we're passionate about creating extraordinary cruise experiences for our customers.
+              At JETSETTERS, we're passionate about creating extraordinary cruise experiences for our customers.
               When you join our team, you become part of a company that values innovation, exceptional service, and work-life balance.
             </p>
             <ListGroup variant="flush" className="mb-4">
@@ -114,7 +114,7 @@ const Careers = () => {
           <Col lg={6}>
             <img 
               src="/images/team.jpg" 
-              alt="JET SETTERS Team" 
+              alt="JETSETTERS Team" 
               className="img-fluid rounded shadow-sm"
               style={{ objectFit: 'cover', height: '100%', width: '100%' }}
             />

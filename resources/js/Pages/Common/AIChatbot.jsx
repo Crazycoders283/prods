@@ -6,7 +6,7 @@ const AIChatbot = () => {
   const [messages, setMessages] = useState([
     {
       type: 'bot',
-      content: 'Hi there! I\'m the JET SETTERS AI assistant. How can I help you today?',
+      content: 'Hi there! I\'m the JETSETTERS AI assistant. How can I help you today?',
     }
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -94,7 +94,7 @@ const AIChatbot = () => {
         if (isAuthenticated) {
           botResponse = {
             type: 'bot',
-            content: 'You\'re currently logged in to your JET SETTERS account. Would you like me to help you manage your profile or view your trip history?'
+            content: 'You\'re currently logged in to your JETSETTERS account. Would you like me to help you manage your profile or view your trip history?'
           };
         } else {
           botResponse = {
@@ -146,7 +146,7 @@ const AIChatbot = () => {
                 <path d="M2 12h20"></path>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
-              <span>JET SETTERS Assistant</span>
+              <span>JETSETTERS Assistant</span>
             </div>
           </div>
           

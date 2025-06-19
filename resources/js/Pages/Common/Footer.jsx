@@ -29,7 +29,7 @@ const Footer = () => {
                   <path d="M2 12h20"></path>
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
-                <h3 className="column-title">JET SETTERS</h3>
+                <h3 className="column-title">JETSETTERS</h3>
               </div>
             </Link>
             <p className="column-description">
@@ -124,7 +124,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <p className="copyright">© {currentYear} JET SETTERS. All rights reserved.</p>
+          <p className="copyright">© {currentYear} JETSETTERS. All rights reserved.</p>
           <div className="social-links">
             <Link
               to="https://linkedin.com"
@@ -169,7 +169,7 @@ const Footer = () => {
               </svg>
             </Link>
             <Link 
-              to="https://instagram.com" 
+              to="https://www.instagram.com/jetsetters_global?igsh=aTFrbGV4cDN1c3Q5" 
               target="_blank"
               rel="noopener noreferrer"
               className="social-link" 

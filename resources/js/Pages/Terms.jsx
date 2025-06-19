@@ -9,8 +9,8 @@ const Terms = () => {
   return (
     <>
       <Helmet>
-        <title>Terms of Service - JET SETTERS</title>
-        <meta name="description" content="JET SETTERS terms and conditions of service for cruise bookings and travel services." />
+        <title>Terms of Service - JETSETTERS</title>
+        <meta name="description" content="JETSETTERS terms and conditions of service for cruise bookings and travel services." />
       </Helmet>
       
       <Navbar forceScrolled={true} />
@@ -26,7 +26,7 @@ const Terms = () => {
                     <h2>Introduction</h2>
                     <p>Last Updated: {new Date().toLocaleDateString()}</p>
                     <p>
-                      Welcome to JET SETTERS. These Terms of Service ("Terms") govern your use of our website, 
+                      Welcome to JETSETTERS. These Terms of Service ("Terms") govern your use of our website, 
                       mobile applications, and services (collectively, the "Services"). By accessing or using our 
                       Services, you agree to be bound by these Terms.
                     </p>
@@ -105,7 +105,7 @@ const Terms = () => {
                       without any warranties of any kind, either express or implied.
                     </p>
                     <p>
-                      <strong>Limitation of Liability:</strong> To the maximum extent permitted by law, JET SETTERS 
+                      <strong>Limitation of Liability:</strong> To the maximum extent permitted by law, JETSETTERS 
                       and its affiliates shall not be liable for any indirect, incidental, special, consequential, 
                       or punitive damages arising from or related to your use of our Services.
                     </p>
@@ -120,7 +120,7 @@ const Terms = () => {
                     <h2>Intellectual Property</h2>
                     <p>
                       All content, features, and functionality of our Services, including text, graphics, logos, 
-                      images, and software, are owned by JET SETTERS, its licensors, or other providers and are 
+                      images, and software, are owned by JETSETTERS, its licensors, or other providers and are 
                       protected by copyright, trademark, and other intellectual property laws.
                     </p>
                   </section>

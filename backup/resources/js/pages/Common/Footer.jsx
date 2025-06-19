@@ -6,7 +6,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <div className="footer-logo">JET SETTERS</div>
+          <div className="footer-logo">JETSETTERS</div>
           <div className="social-links">
             <a href="#" aria-label="Facebook"><i className="fab fa-facebook"></i></a>
             <a href="#" aria-label="Twitter"><i className="fab fa-twitter"></i></a>

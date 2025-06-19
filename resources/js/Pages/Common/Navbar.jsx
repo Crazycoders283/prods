@@ -78,7 +78,7 @@ const Navbar = ({ forceScrolled }) => {
               <path d="M2 12h20"></path>
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
             </svg>
-            <span>JET SETTERS</span>
+            <span>JETSETTERS</span>
           </div>
         </Link>
       </div>
