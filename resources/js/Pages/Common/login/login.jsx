@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './login.css';
 import { authAPI } from '../../../api'; // Import the authAPI for making API calls
@@ -13,6 +13,7 @@ import {
 
 export default function Login() {
     const navigate = useNavigate();
+    const emailInputRef = useRef(null);
 
     const [data, setData] = useState({
         email: '',
@@ -22,6 +23,7 @@ export default function Login() {
 
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
+    const [facebookProcessing, setFacebookProcessing] = useState(false);
 
     // Initialize Google API client
     useEffect(() => {
@@ -134,6 +136,77 @@ export default function Login() {
         promptGoogleSignIn();
     };
 
+    // Facebook SDK initialization
+    useEffect(() => {
+        // Load Facebook SDK
+        if (!window.FB) {
+            window.fbAsyncInit = function() {
+                window.FB.init({
+                    appId      : 'YOUR_FACEBOOK_APP_ID', // Replace with your Facebook App ID
+                    cookie     : true,
+                    xfbml      : true,
+                    version    : 'v18.0'
+                });
+            };
+            (function(d, s, id){
+                var js, fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) {return;}
+                js = d.createElement(s); js.id = id;
+                js.src = "https://connect.facebook.net/en_US/sdk.js";
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        }
+    }, []);
+
+    // Facebook login handler
+    const handleFacebookLogin = () => {
+        setFacebookProcessing(true);
+        setErrors({});
+        if (!window.FB) {
+            setFacebookProcessing(false);
+            setErrors({ login: 'Facebook SDK not loaded. Please try again.' });
+            return;
+        }
+        window.FB.login(function(response) {
+            if (response.authResponse) {
+                const accessToken = response.authResponse.accessToken;
+                // Send accessToken to backend for login/auth
+                authAPI.facebookLogin({ token: accessToken })
+                    .then(authResponse => {
+                        if (authResponse && authResponse.data && authResponse.data.token) {
+                            localStorage.setItem('token', authResponse.data.token);
+                            localStorage.setItem('isAuthenticated', 'true');
+                            localStorage.setItem('user', JSON.stringify({
+                                id: authResponse.data.id,
+                                email: authResponse.data.email,
+                                firstName: authResponse.data.firstName,
+                                lastName: authResponse.data.lastName
+                            }));
+                            setFacebookProcessing(false);
+                            navigate('/my-trips');
+                        } else {
+                            setFacebookProcessing(false);
+                            setErrors({ login: 'Facebook login failed. Please try again.' });
+                        }
+                    })
+                    .catch(() => {
+                        setFacebookProcessing(false);
+                        setErrors({ login: 'Facebook login failed. Please try again.' });
+                    });
+            } else {
+                setFacebookProcessing(false);
+                setErrors({ login: 'Facebook login was cancelled or failed.' });
+            }
+        }, {scope: 'public_profile,email'});
+    };
+
+    // Email button handler: focus the email input
+    const handleEmailButton = () => {
+        if (emailInputRef.current) {
+            emailInputRef.current.focus();
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setData({
@@ -180,9 +253,9 @@ export default function Login() {
     };
 
     return (
-        <div>
-            <div className="login-container">
-                <div className="login-card">
+        <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+            <div className="login-container" style={{ width: '100%', maxWidth: 400, margin: '0 auto', boxSizing: 'border-box' }}>
+                <div className="login-card" style={{ width: '100%', maxWidth: 400, margin: '0 auto', boxSizing: 'border-box' }}>
                     {/* Image Section */}
                     <div
                         className="login-image"
@@ -199,10 +272,11 @@ export default function Login() {
                                 {errors.login}
                             </div>
                         )}
-                        <form className="login-form" onSubmit={submit}>
+                        <form className="login-form" onSubmit={submit} aria-label="Login form">
                             <div className="form-group">
                                 <label htmlFor="email">Email</label>
                                 <input
+                                    ref={emailInputRef}
                                     value={data.email}
                                     type="email"
                                     name="email"
@@ -210,8 +284,10 @@ export default function Login() {
                                     id="email"
                                     placeholder="username@gmail.com"
                                     className="form-input"
+                                    aria-required="true"
+                                    aria-invalid={!!errors.email}
                                 />
-                                {errors.email && <div className="error-message">{errors.email}</div>}
+                                {errors.email && <div className="error-message" aria-live="polite">{errors.email}</div>}
                             </div>
                             <div className="form-group">
                                 <label htmlFor="password">Password</label>
@@ -245,14 +321,16 @@ export default function Login() {
                             </div>
                             <button 
                                 className="login-button" 
-                                disabled={processing}
+                                disabled={processing || facebookProcessing}
+                                aria-busy={processing || facebookProcessing}
                             >
-                                {processing ? 'Signing in...' : 'Sign In'}
+                                {(processing || facebookProcessing) ? <span className="spinner mr-2" aria-label="Loading"></span> : null}
+                                {(processing || facebookProcessing) ? 'Signing in...' : 'Sign In'}
                             </button>
                             
-                            <div className="login-divider">or continue with</div>
+                            <div className="login-divider" role="separator" aria-orientation="horizontal">or continue with</div>
                             <div className="social-login">
-                                <button type="button" className="social-button" onClick={handleGoogleSignIn}>
+                                <button type="button" className="social-button" onClick={handleGoogleSignIn} disabled={processing || facebookProcessing} aria-label="Sign in with Google">
                                     <img
                                         src="/images/login/google-logo.svg"
                                         alt="Google"
@@ -260,7 +338,7 @@ export default function Login() {
                                         height="24"
                                     />
                                 </button>
-                                <button type="button" className="social-button">
+                                <button type="button" className="social-button" onClick={handleFacebookLogin} disabled={facebookProcessing || processing} aria-label="Sign in with Facebook">
                                     <img
                                         src="/images/login/facebook-logo.svg"
                                         alt="Facebook"
@@ -268,7 +346,7 @@ export default function Login() {
                                         height="24"
                                     />
                                 </button>
-                                <button type="button" className="social-button">
+                                <button type="button" className="social-button" onClick={handleEmailButton} disabled={processing || facebookProcessing} aria-label="Sign in with Email">
                                     <img
                                         src="/images/login/email-icon.svg"
                                         alt="Email"

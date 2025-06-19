@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './login.css'; // Reuse the login CSS
 import { authAPI } from '../../../api'; // Import the authAPI for making API calls
+import { FaUserCircle, FaInfoCircle } from 'react-icons/fa';
 
 export default function Signup() {
     const navigate = useNavigate();
@@ -17,6 +18,8 @@ export default function Signup() {
 
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -130,9 +133,17 @@ export default function Signup() {
     };
 
     return (
-        <div>
-            <div className="login-container">
-                <div className="login-card">
+        <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+            <div className="login-container" style={{ width: '100%', maxWidth: 480, margin: '0 auto', boxSizing: 'border-box' }}>
+                <div className="login-card fade-in" style={{ width: '100%', maxWidth: 480, margin: '0 auto', boxSizing: 'border-box', boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)', border: '1px solid #e5e7eb', borderRadius: 16 }}>
+                    {/* Step Indicator */}
+                    <div className="flex items-center justify-center pt-6 pb-2">
+                        <span className="text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 px-3 py-1 rounded-full">Step 1: Create Account</span>
+                    </div>
+                    {/* Avatar/Icon */}
+                    <div className="flex justify-center mb-2 mt-2">
+                        <FaUserCircle size={54} color="#0855A2" />
+                    </div>
                     {/* Image Section */}
                     <div
                         className="login-image"
@@ -140,11 +151,10 @@ export default function Signup() {
                             backgroundImage: `url('/images/Rectangle 1434 (1).png')`,
                         }}
                     ></div>
-
                     {/* Signup Form Section */}
                     <div className="login-content">
                         <h2 className="login-title">Sign Up</h2>
-                        <form className="login-form" onSubmit={submit}>
+                        <form className="login-form" onSubmit={submit} aria-label="Signup form">
                             <div className="form-group">
                                 <label htmlFor="firstName">First Name</label>
                                 <input
@@ -188,31 +198,51 @@ export default function Signup() {
                             </div>
                             
                             <div className="form-group">
-                                <label htmlFor="password">Password</label>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    value={data.password}
-                                    onChange={handleChange}
-                                    id="password"
-                                    placeholder="Password"
-                                    className="form-input"
-                                />
-                                {errors.password && <div className="error-message">{errors.password}</div>}
+                                <label htmlFor="password">Password
+                                    <span className="ml-1 relative group cursor-pointer">
+                                        <FaInfoCircle size={14} color="#888" />
+                                        <span className="absolute left-5 top-0 z-10 hidden group-hover:block bg-white border border-gray-300 text-xs text-gray-700 rounded px-2 py-1 shadow-lg w-48">Password must be at least 8 characters and contain a mix of letters and numbers.</span>
+                                    </span>
+                                </label>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        name="password"
+                                        value={data.password}
+                                        onChange={handleChange}
+                                        id="password"
+                                        placeholder="Password"
+                                        className="form-input"
+                                        aria-required="true"
+                                        aria-invalid={!!errors.password}
+                                    />
+                                    <button type="button" onClick={() => setShowPassword(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888' }} tabIndex={-1} aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                                        {showPassword ? '🙈' : '👁️'}
+                                    </button>
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">Password must be at least 8 characters.</div>
+                                {errors.password && <div className="error-message" aria-live="polite">{errors.password}</div>}
                             </div>
                             
                             <div className="form-group">
                                 <label htmlFor="confirmPassword">Confirm Password</label>
-                                <input
-                                    type="password"
-                                    name="confirmPassword"
-                                    value={data.confirmPassword}
-                                    onChange={handleChange}
-                                    id="confirmPassword"
-                                    placeholder="Confirm Password"
-                                    className="form-input"
-                                />
-                                {errors.confirmPassword && <div className="error-message">{errors.confirmPassword}</div>}
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type={showConfirmPassword ? 'text' : 'password'}
+                                        name="confirmPassword"
+                                        value={data.confirmPassword}
+                                        onChange={handleChange}
+                                        id="confirmPassword"
+                                        placeholder="Confirm Password"
+                                        className="form-input"
+                                        aria-required="true"
+                                        aria-invalid={!!errors.confirmPassword}
+                                    />
+                                    <button type="button" onClick={() => setShowConfirmPassword(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888' }} tabIndex={-1} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
+                                        {showConfirmPassword ? '🙈' : '👁️'}
+                                    </button>
+                                </div>
+                                {errors.confirmPassword && <div className="error-message" aria-live="polite">{errors.confirmPassword}</div>}
                             </div>
                             
                             <div className="form-options">
@@ -274,6 +304,16 @@ export default function Signup() {
                     </div>
                 </div>
             </div>
+            <style>{`
+                .fade-in { animation: fadeIn 0.7s; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+                .enhanced-social { transition: box-shadow 0.2s, transform 0.2s; }
+                .enhanced-social:hover:not(:disabled) { box-shadow: 0 2px 8px rgba(8,85,162,0.10); transform: translateY(-2px) scale(1.07); }
+                .animate-fadeIn { animation: fadeIn 0.7s; }
+                .animate-bounceIn { animation: bounceIn 0.7s; }
+                @keyframes bounceIn { 0% { transform: scale(0.9); opacity: 0; } 60% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+                .group:hover .group-hover\:block { display: block; }
+            `}</style>
         </div>
     );
 } 
